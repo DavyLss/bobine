@@ -1,0 +1,18 @@
+const fs=require('node:fs'),assert=require('node:assert/strict'),{JSDOM}=require('jsdom');
+const dom=new JSDOM(fs.readFileSync('studio/static/index.html','utf8'),{url:'http://localhost:8511/',runScripts:'outside-only'}),w=dom.window,d=w.document,$=id=>d.getElementById(id);
+w.scrollTo=()=>{};w.HTMLElement.prototype.reportValidity=function(){return this.checkValidity()};
+w.eval(fs.readFileSync('studio/static/design.js','utf8'));
+const links=[...d.querySelectorAll('.rail nav a')],panels=[...d.querySelectorAll('.composer-panel')];
+assert.equal(d.querySelector('.right-column').parentElement.className,'layout');assert.equal(links.length,4);assert(links.every(l=>l.getAttribute('aria-label')));assert.equal(d.body.dataset.view,'create');
+assert.equal(panels.filter(p=>!p.hidden).length,1);assert(!panels[0].hidden);
+$('composer-next').click();assert(!panels[0].hidden,'Invalid subject must stay visible');
+$('title').value='Le DevOps';$('description').value='Expliquer les trois voies avec un exemple concret.';
+$('composer-next').click();assert(!panels[1].hidden);assert.equal($('voice').closest('.composer-panel'),panels[1]);
+$('composer-next').click();assert(!panels[2].hidden);assert(!d.querySelector('.composer-launch').hidden);assert($('launch-summary').textContent.includes('Le DevOps'));
+$('composer-back').click();assert(!panels[1].hidden);
+w.location.hash='#history';w.dispatchEvent(new w.HashChangeEvent('hashchange'));assert.equal(links[2].getAttribute('aria-current'),'page');assert.equal(d.body.dataset.view,'history');
+w.location.hash='#batch-monitor';w.dispatchEvent(new w.HashChangeEvent('hashchange'));assert(!$('queue-empty').hidden);
+$('create-batch').click();w.dispatchEvent(new w.HashChangeEvent('hashchange'));assert.equal(d.body.dataset.view,'create');assert(!panels[0].hidden);
+const providers=[...d.querySelectorAll('[data-provider]')],cards=[...d.querySelectorAll('.integration-card')];providers[3].click();assert(!cards[3].hidden);assert(cards[2].hidden);assert.equal(cards.filter(c=>!c.hidden).length,1);
+$('new').click();assert(!panels[0].hidden);assert.equal(d.querySelectorAll('#generate').length,1);assert.equal(d.querySelectorAll('#voice').length,1);
+dom.window.close();console.log('OK: three-step validation, back navigation, routes, empty queue, provider tabs, summary and form controls.');

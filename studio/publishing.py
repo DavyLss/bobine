@@ -34,6 +34,29 @@ def summarize(record):
 def save(out,record,changed):
     record['updated']=time.time();write_json(Path(out)/'Publishing.json',record);changed(public_report(record))
 
+def cleanup_hosted(out,record,config,changed):
+    """Delete only this job's hosted assets after every destination confirms publication."""
+    if not record.get('targets') or any(t.get('status')!='published' for t in record['targets'].values()):return
+    assets=[(name,asset) for name,asset in record.get('assets',{}).items() if not asset.get('deleted_at')]
+    if not assets:return
+    try:
+        for name,asset in assets:
+            public_id=asset.get('public_id','')
+            if asset.get('cloud')!=config.get('cloudinary_cloud_name') or not public_id.startswith('local-video-studio/'+Path(out).name+'/'):
+                raise ValueError('Média non supprimé : origine Cloudinary différente ou identifiant inattendu.')
+            params={'public_id':public_id,'timestamp':str(int(time.time())),'invalidate':'true'}
+            signed='&'.join(f'{key}={value}' for key,value in sorted(params.items()))+config['cloudinary_api_secret']
+            params.update(signature=hashlib.sha1(signed.encode()).hexdigest(),api_key=config['cloudinary_api_key'])
+            kind='video' if name.endswith('.mp4') else 'image'
+            result,_=api.request_json('POST',f"https://api.cloudinary.com/v1_1/{asset['cloud']}/{kind}/destroy",config,data=params)
+            if result.get('result') not in ['ok','not found']:raise RuntimeError('Cloudinary ne confirme pas la suppression.')
+            asset['deleted_at']=time.time();save(out,record,changed)
+        record['cleanup_status']='done';record['message']='Publication confirmée sur tous les réseaux. Médias Cloudinary supprimés ; fichiers locaux conservés.'
+    except Exception as error:
+        record['cleanup_status']='error';record['message']='Publication confirmée. Purge Cloudinary à réessayer : '+api.clean_error(error,config)
+    save(out,record,changed)
+
+
 def cloud_upload(path,config,progress=lambda message:None):
     path=Path(path);video=path.suffix=='.mp4';kind='video' if video else 'image'
     total=path.stat().st_size
@@ -57,9 +80,16 @@ def cloud_upload(path,config,progress=lambda message:None):
 def hosted(out,filename,config,record,changed):
     cached=record['assets'].get(filename)
     with (Path(out)/filename).open('rb') as source:digest=hashlib.file_digest(source,'sha256').hexdigest()
-    if cached and cached.get('cloud')==config['cloudinary_cloud_name'] and cached.get('sha256')==digest:return cached['url']
-    record['message']='Transfert du média vers Cloudinary.';save(out,record,changed)
-    def progress(message):record['message']=message;save(out,record,changed)
+    if cached and not cached.get('deleted_at') and cached.get('cloud')==config['cloudinary_cloud_name'] and cached.get('sha256')==digest:return cached['url']
+    record['message']='Transfert du média vers Cloudinary.'
+    for target in record['targets'].values():
+        if target.get('status')=='preparing':target.update(status='uploading',message=record['message'])
+    save(out,record,changed)
+    def progress(message):
+        record['message']=message
+        for target in record['targets'].values():
+            if target.get('status')=='uploading':target['message']=message
+        save(out,record,changed)
     asset=cloud_upload(Path(out)/filename,config,progress);record['assets'][filename]=asset;save(out,record,changed);return asset['url']
 
 def youtube_upload(out,text,config,target,persist):
@@ -161,7 +191,7 @@ def run(out,platforms,mode,changed=lambda record:None,expected_accounts=None):
             previous.update(status='uncertain',message='Un envoi précédent peut avoir abouti. Contrôler le réseau avant toute nouvelle publication.');save(out,record,changed);continue
         if previous.get('post_id') or (previous.get('status') in ['uncertain','interrupted','published'] and not resumable):continue
         target=record['targets'].setdefault(platform,{'account_id':ids[platform],'status':'pending'})
-        target['message']='Préparation de l’envoi.';record.update(status='sending',message='Envoi vers '+platform);save(out,record,changed)
+        target.update(status='preparing',message='Préparation de l’envoi.');record.update(status='sending',message='Envoi vers '+platform);save(out,record,changed)
         try:
             if platform=='youtube':youtube_upload(out,text,config,target,lambda:save(out,record,changed))
             elif platform=='instagram':instagram_publish(out,text,config,target,record,changed)
@@ -169,7 +199,7 @@ def run(out,platforms,mode,changed=lambda record:None,expected_accounts=None):
         except Exception as error:
             ambiguous=target.get('publish_attempted') or target.get('youtube_session')
             target.update(status='uncertain' if ambiguous else 'error',message=api.clean_error(error,config));save(out,record,changed)
-    record.update(status=summarize(record),message='État des envois enregistré. Un envoi accepté ne vaut pas confirmation de publication.');save(out,record,changed);return public_report(record)
+    record.update(status=summarize(record),message='État des envois enregistré. Un envoi accepté ne vaut pas confirmation de publication.');save(out,record,changed);cleanup_hosted(out,record,config,changed);return public_report(record)
 
 def refresh(out,changed=lambda record:None):
     out=Path(out);record=load_report(out);config=api.load()
@@ -195,4 +225,4 @@ def refresh(out,changed=lambda record:None):
             if target.get('publish_attempted') and not target.get('post_id'):
                 target.update(status='uncertain')
             target['message']=api.clean_error(error,config)
-    record.update(status=summarize(record),last_checked=time.time());save(out,record,changed);return public_report(record)
+    record.update(status=summarize(record),last_checked=time.time());save(out,record,changed);cleanup_hosted(out,record,config,changed);return public_report(record)

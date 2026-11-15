@@ -219,7 +219,7 @@ def social_worker():
         except queue.Empty:
             if not integrations.load().get('enabled'):continue
             with LOCK:
-                candidates=sorted((job for job in state['jobs'] if job.get('publication',{}).get('status') in ['submitted','needs_attention'] and time.time()-job.get('publication',{}).get('last_checked',0)>60 and job['id'] not in SOCIAL_ACTIVE),key=lambda job:job.get('publication',{}).get('last_checked',0))[:3]
+                candidates=sorted((job for job in state['jobs'] if (job.get('publication',{}).get('status') in ['submitted','needs_attention'] or job.get('publication',{}).get('cleanup_status')=='error') and time.time()-job.get('publication',{}).get('last_checked',0)>60 and job['id'] not in SOCIAL_ACTIVE),key=lambda job:job.get('publication',{}).get('last_checked',0))[:3]
                 for job in candidates:
                     SOCIAL_ACTIVE.add(job['id']);SOCIAL_PENDING.put((job['id'],'refresh',None,'queue',None))
             continue

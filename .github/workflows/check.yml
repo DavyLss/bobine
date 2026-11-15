@@ -23,6 +23,7 @@ jobs:
       - run: python scripts/check_api.py
       - run: python scripts/check_batches.py
       - run: python scripts/check_social.py
+      - run: python scripts/check_cleanup.py
       - uses: actions/setup-node@v4
         with:
           node-version: '24'

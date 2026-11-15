@@ -23,7 +23,7 @@ w.fetch=async(url,options={})=>{const body=options.body?JSON.parse(options.body)
 const settle=async()=>{for(let i=0;i<12;i++)await new Promise(resolve=>setImmediate(resolve));};
 const event=(node,type)=>node.dispatchEvent(new w.Event(type,{bubbles:true,cancelable:true}));
 (async()=>{
- vm.runInContext(fs.readFileSync(path.join(root,'studio/static/app.js'),'utf8'),dom.getInternalVMContext());vm.runInContext(fs.readFileSync(path.join(root,'studio/static/social.js'),'utf8'),dom.getInternalVMContext());await settle();
+ vm.runInContext(fs.readFileSync(path.join(root,'studio/static/app.js'),'utf8'),dom.getInternalVMContext());vm.runInContext(fs.readFileSync(path.join(root,'studio/static/social.js'),'utf8'),dom.getInternalVMContext());vm.runInContext(fs.readFileSync(path.join(root,'studio/static/design.js'),'utf8'),dom.getInternalVMContext());await settle();
  assert.match($('youtube-connection').textContent,/Ma chaîne/);assert.equal($('buffer-token').value,'');assert.match($('buffer-token').placeholder,/enregistré/);assert.equal($('steps').children.length,6);
  assert.equal(w.document.querySelectorAll('.api-notice').length,4);assert.equal($('youtube-redirect').textContent,config.youtube_redirect_uri);
  $('integration-enabled').checked=true;$('buffer-token').value='secret-de-test';event($('integration-form'),'submit');await settle();assert.equal(calls.filter(c=>c.url==='/api/social/settings'&&c.method==='PUT').at(-1).body.buffer_token,'secret-de-test');assert.equal($('buffer-token').value,'');

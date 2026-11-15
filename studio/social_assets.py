@@ -27,7 +27,13 @@ class PublicationText(BaseModel):
 def write_json(path,value):
     temporary=path.with_suffix('.tmp');temporary.write_text(json.dumps(value,ensure_ascii=False,indent=2),encoding='utf-8')
     if os.name!='nt':temporary.chmod(0o600)
-    temporary.replace(path)
+    import time
+    for attempt in range(10):
+        try:
+            temporary.replace(path);break
+        except PermissionError:
+            if attempt==9:raise
+            time.sleep(.05*(attempt+1))
 
 def build_text(config,scenario):
     schema=PublicationText.model_json_schema()

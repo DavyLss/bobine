@@ -76,7 +76,7 @@ Buffer n'accepte pas d'envoi de fichier direct : il récupère une URL publique 
 3. Dans l'environnement produit et les réglages **API Keys**, relever Cloud name, API key et API secret.
 4. Les saisir dans le studio et tester. Le test utilise un ping authentifié, sans transférer de vidéo.
 
-Le serveur signe les envois ; aucun preset public non signé n'est nécessaire. Les vidéos sont envoyées en morceaux pour limiter la mémoire et gérer les gros fichiers. Les URL HTTPS retournées doivent rester accessibles jusqu'à la publication. Les fichiers hébergés ne sont pas supprimés automatiquement, notamment pour ne pas casser une file Buffer prévue plus tard. L'offre gratuite a des quotas ; aucun achat n'est déclenché par le studio.
+Le serveur signe les envois ; aucun preset public non signé n'est nécessaire. Les vidéos sont envoyées en morceaux pour limiter la mémoire et gérer les gros fichiers. Les URL HTTPS retournées doivent rester accessibles jusqu'à la publication. Les fichiers Cloudinary de chaque vidéo sont supprimés automatiquement dès que tous ses réseaux de destination confirment la publication. Une file Buffer en attente, un échec ou un statut incertain bloque la purge. Les fichiers locaux sont conservés. En cas d’échec de purge, le studio réessaie lors des contrôles automatiques. L'offre gratuite a des quotas ; aucun achat n'est déclenché par le studio.
 
 - API d'envoi : https://cloudinary.com/documentation/upload_images
 - Administration/ping : https://cloudinary.com/documentation/admin_api
