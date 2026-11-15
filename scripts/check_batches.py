@@ -90,7 +90,7 @@ sys.exit(1 if request['title'].startswith('FAIL') else 0)
         failed=next(batch for batch in snapshot['batches'] if batch['id']==first['id'])
         assert failed['status']=='finished' and failed['counts']['done']==2 and failed['counts']['failed']==1 and failed['progress']==100
         assert summary['status']=='done' and summary['counts']['done']==2
-        assert snapshot['settings']==defaults
+        assert snapshot['settings']=={**defaults,'auto_publish':False,'publish_platforms':[],'publish_mode':'queue'}
         # Restart representation keeps metadata; previously active items become interrupted.
         persisted=json.loads(server.STATE.read_text(encoding='utf-8'));assert len(persisted['batches'])==2
         retry=post(client,f"/api/batches/{first['id']}/retry",{});assert retry.status_code==201

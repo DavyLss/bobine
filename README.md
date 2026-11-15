@@ -52,7 +52,17 @@ La durée est une cible : la voix garde son rythme et ses pauses. Le moteur sél
 | Contrôle du texte et alignement | faster-whisper Base |
 | Animation et export | Pillow, NumPy, MoviePy, FFmpeg, NVENC ou libx264 |
 
-Le téléchargement initial nécessite Internet ; la génération n'appelle aucun service de synthèse, API payante ou hébergeur. Ollama et les modèles doivent être présents localement. Aucune publication automatique sur les réseaux n'est incluse.
+Le téléchargement initial nécessite Internet ; la génération de la vidéo et du kit de publication reste locale. Ollama et les modèles doivent être présents sur le poste. La diffusion est facultative : elle envoie les fichiers aux réseaux configurés et, pour Instagram/TikTok, à l'hébergement média Cloudinary.
+
+## Publication automatique des Reels
+
+Le studio peut publier sur **YouTube via son API native**, **Instagram via son API native** et **TikTok via Buffer**. Les connexions se règlent dans l'interface, avec une notice et les liens de création des accès pour chaque API. Voir [PUBLICATION.md](docs/PUBLICATION.md).
+
+Pour chaque nouvelle vidéo, Ollama prépare localement le titre, la description et les hashtags. Pillow génère une miniature verticale et une miniature YouTube selon la charte ; elles restent éditables et téléchargeables. Le JPG est envoyé directement à YouTube et fourni comme couverture à Instagram. Buffer ne transmettant pas de miniature JPEG, une copie TikTok peut inclure la couverture générée pendant les 0,6 premières secondes, sans changer l'export original.
+
+Les envois sont désactivés par défaut. Après configuration, cocher les réseaux et **Publier automatiquement les Reels terminés** pour une vidéo ou un lot. Les vidéos existantes disposent d'un bouton de préparation du kit et d'un envoi manuel. Le suivi conserve un reçu par réseau et distingue réception, traitement et publication confirmée. Les résultats incertains ne sont pas renvoyés aveuglément.
+
+Les API YouTube et Instagram ne nécessitent pas d'abonnement de publication ; leurs quotas, comptes et autorisations restent applicables. Buffer et Cloudinary ont leurs propres offres et limites. Aucun achat n'est déclenché par le studio. Les accès de l'utilisateur sont indispensables pour une publication réelle ; les tests automatisés utilisent des services simulés.
 
 Les poids volumineux sont téléchargés depuis leurs sources officielles, avec révisions fixées dans [models.json](models.json). Le tag Ollama peut évoluer : son empreinte observée est indiquée dans le manifeste. Les coûts éventuels sont ceux du matériel et de l'électricité ; aucune clé API n'est nécessaire.
 
@@ -80,6 +90,7 @@ Les mêmes réglages peuvent être conservés dans `.local/config.json` (clés `
 .venv/Scripts/python.exe -m pip install -r requirements-test.txt -c requirements-lock.txt
 .venv/Scripts/python.exe scripts/check_api.py
 .venv/Scripts/python.exe scripts/check_batches.py
+.venv/Scripts/python.exe scripts/check_social.py
 ```
 
 Le contrôle hors ligne vérifie l'intégrité du profil vocal, les 32 combinaisons de rendu (8 compositions × 2 chartes × 2 formats), la configuration et un export court CPU. Il ne télécharge pas les modèles et ne certifie pas la qualité d'une nouvelle narration. [État des validations](docs/VALIDATION.md).

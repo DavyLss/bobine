@@ -14,6 +14,7 @@ jobs:
       - run: python scripts/check.py
       - run: python scripts/check_api.py
       - run: python scripts/check_batches.py
+      - run: python scripts/check_social.py
       - uses: actions/setup-node@v4
         with:
           node-version: '24'

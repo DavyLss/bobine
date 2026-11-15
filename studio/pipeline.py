@@ -106,7 +106,14 @@ def main(out):
         verification={'duration':clip.duration,'size':clip.size,'fps':clip.fps,'audio_peak':peak,'reference_sha256':data['reference_sha256'],'scope':'Contrôles techniques et transcription. Le scénario IA et le naturel de la voix restent à relire et écouter avant publication.'}
     (out/'Verification.json').write_text(json.dumps(verification,ensure_ascii=False,indent=2),encoding='utf-8')
     warning=''
-    if abs(duration-config['duration'])>max(8,config['duration']*.25):warning='La durée réelle s’écarte de la cible ; le débit de la voix et les pauses ont été conservés.'
+    emit('metadata','Titre, description, hashtags et miniatures · génération locale…',99)
+    try:
+        from social_assets import create
+        create(out,config,data)
+    except Exception as error:
+        (out/'Publication-Erreur.txt').write_text(str(error),encoding='utf-8')
+        warning='Vidéo prête, mais le kit de publication local a échoué. Le régénérer avant tout envoi.'
+    if abs(duration-config['duration'])>max(8,config['duration']*.25):warning=(warning+' La durée réelle s’écarte de la cible ; le débit de la voix et les pauses ont été conservés.').strip()
     emit('done','Vidéo prête.',100,actual_duration=round(duration,2),warning=warning)
 if __name__=='__main__':
     out=Path(sys.argv[1]).resolve()

@@ -14,6 +14,15 @@ class VideoSettings(BaseModel):
     duration:int=Field(default=90,ge=15,le=180)
     format:Literal['reel','standard']='reel'
     voice:Literal['Narrateur-Homme-01']=VOICE_ID
+    auto_publish:bool=False
+    publish_platforms:list[Literal['youtube','instagram','tiktok']]=Field(default_factory=list,max_length=3)
+    publish_mode:Literal['queue','now']='queue'
+
+    @model_validator(mode='after')
+    def publication_options(self):
+        if len(self.publish_platforms)!=len(set(self.publish_platforms)):raise ValueError('Réseau de publication en double.')
+        if self.auto_publish and (self.format!='reel' or not self.publish_platforms):raise ValueError('La publication automatique nécessite le format Reel et au moins un réseau.')
+        return self
 
 class VideoRequest(VideoSettings):
     title:str=Field(min_length=3,max_length=120)
@@ -40,7 +49,7 @@ class BatchRequest(BaseModel):
 def normalize(value):
     return ''.join(c for c in unicodedata.normalize('NFD',value.strip().lower()) if not unicodedata.combining(c))
 
-HEADERS={'title':'title','titre':'title','description':'description','theme':'theme','charte':'theme','direction':'theme','duration':'duration','duree':'duration','format':'format','voice':'voice','voix':'voice'}
+HEADERS={'title':'title','titre':'title','description':'description','theme':'theme','charte':'theme','direction':'theme','duration':'duration','duree':'duration','format':'format','voice':'voice','voix':'voice','auto_publish':'auto_publish','publication_auto':'auto_publish','publish_platforms':'publish_platforms','reseaux':'publish_platforms','publish_mode':'publish_mode','mode_publication':'publish_mode'}
 ALIASES={
     'theme':{'dark':'dark','sombre':'dark','atelier sombre':'dark','light':'light','clair':'light','editorial clair':'light'},
     'format':{'reel':'reel','reels':'reel','9:16':'reel','standard':'standard','16:9':'standard'},
@@ -79,11 +88,13 @@ def validate_batch(body):
         for key,value in row.items():
             if isinstance(value,str):value=value.strip()
             if value=='' and key in values:continue
+            if key=='publish_platforms' and isinstance(value,str):value=[s.strip().lower() for s in value.split('|') if s.strip()]
+            if key=='auto_publish' and isinstance(value,str):value={'oui':True,'non':False}.get(normalize(value),value)
             if key in ALIASES and isinstance(value,str):value=ALIASES[key].get(normalize(value),value)
             values[key]=value
         try:items.append(VideoRequest.model_validate(values).model_dump())
         except ValidationError as error:
-            fields=', '.join(dict.fromkeys(str(e['loc'][0]) for e in error.errors()))
+            fields=', '.join(dict.fromkeys(str(e['loc'][0]) if e['loc'] else 'publication_auto / réseaux / format' for e in error.errors()))
             errors.append(f'Ligne {line} : vérifier {fields}. Durée entière de 15 à 180 s ; charte dark/light ; format reel/standard ; voix {VOICE_ID}. Titre de 3 à 120 caractères, description de 10 à 6 000 caractères.')
     if errors:raise ValueError('\n'.join(errors))
     return items,[line for line,_ in rows]

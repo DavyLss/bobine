@@ -32,4 +32,14 @@ L'export de contrôle utilise une sinusoïde, pas la narration IA ; il vérifie 
 - Tests DOM avec jsdom : saisie et réordonnancement, réglages, import et aperçu CSV, invalidation de l'aperçu après changement des paramètres, gestion des erreurs, suivi de progression et sélection manuelle, annulation, protection contre l'injection HTML, navigation clavier des onglets.
 - Aucun test de lot ne lance les modèles IA. Les tests DOM ne remplacent pas un contrôle visuel dans un navigateur.
 
-Le lancement automatique local de cette nouvelle version a été refusé par le contrôle d'approbation (« blocked by policy »). Le studio a été installé et ses réglages locaux préparés pour le port 8511 ; ouvrir manuellement `Lancer-Studio.ps1` pour contrôler son rendu dans le navigateur. L'ancien service 8510 n'a pas été modifié.
+La version courante est installée sur le port 8511, avec les modèles locaux prêts et les cinq tâches historiques conservées. Le service 8510 n'a pas été modifié.
+
+## Publication native et Buffer
+
+Les contrôles `scripts/check_social.py` couvrent les secrets locaux (DPAPI sur Windows), les protections OAuth state/PKCE, les paramètres de publication CSV, les miniatures réellement générées, les contrats d'envoi YouTube/Instagram/Buffer, la reprise d'une session YouTube, le refus de doublons après un résultat incertain, les changements de compte, les signatures et morceaux Cloudinary. Un export court réel vérifie la copie TikTok, sa couverture de 0,6 s, le silence initial et la conservation du fichier original.
+
+`scripts/check_social_ui.cjs` couvre les notices des quatre services, les champs secrets masqués après enregistrement, la connexion OAuth, les options automatiques, l'édition locale du kit, les liens de miniatures et les reçus par réseau.
+
+Ces tests simulent tous les services externes : aucun envoi réel sur les comptes de l'utilisateur n'est prétendu. Un kit de publication a aussi été préparé avec l'Ollama du poste pour la vidéo existante sur la culture sans blâme ; les deux miniatures ont été inspectées et la collision du pied de page de la version horizontale a été corrigée.
+
+Le service actualisé répond HTTP 200 sur l'interface, le JavaScript de publication, les réglages masqués, le kit d'une vidéo et la notice complète. Les envois restent désactivés et aucun accès réel n'a été renseigné. Le contrôle visuel automatisé du navigateur n'a pas pu être effectué : sa politique d'accès a refusé l'onglet resté sur une ancienne page d'erreur. Les tests DOM sont passés sans utiliser ce navigateur.

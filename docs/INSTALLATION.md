@@ -19,6 +19,8 @@ Pour un second studio sans toucher au premier : `$env:STUDIO_PORT = '8511'`. Les
 
 Le lanceur PowerShell ne termine jamais un service déjà actif. Pour voir les erreurs, lancer `python studio/server.py` au premier plan. Les journaux du lanceur sont dans `.local/`.
 
+Après une mise à jour du code, `Redemarrer-Studio.ps1` peut relancer le studio. Il refuse d'arrêter un rendu/transfert actif et vérifie que le processus du port appartient à ce dépôt avant de l'arrêter. Les préférences, vidéos et reçus sont conservés. Une préparation distante déjà acceptée continue chez le fournisseur.
+
 Le code de rendu prévoit les polices Segoe sous Windows et DejaVu sous Linux. Aucun installateur Linux/macOS complet n'est fourni et ces plateformes n'ont pas été validées. Une police personnalisée exige les variables `STUDIO_FONT` et `STUDIO_FONT_BOLD`.
 
 Pour une migration : cloner le dépôt, installer, puis restaurer séparément les dossiers de modèles et de travail. L'historique existant de l'ancien poste n'est pas importé automatiquement. Les chemins relatifs du dépôt ne contiennent aucun chemin personnel du poste d'origine.

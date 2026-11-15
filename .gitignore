@@ -18,3 +18,5 @@ outputs/
 *.bin
 .DS_Store
 node_modules/
+integrations.json
+Publishing.json
