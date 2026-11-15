@@ -11,6 +11,14 @@ jobs:
           cache: pip
       - run: python -m pip install -r requirements.txt -r requirements-test.txt -c requirements-lock.txt
       - run: python -m compileall -q studio scripts
+      - name: Check PowerShell script syntax
+        shell: pwsh
+        run: |
+          Get-ChildItem -Filter '*.ps1' | ForEach-Object {
+            $parseErrors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile($_.FullName, [ref]$null, [ref]$parseErrors) | Out-Null
+            if ($parseErrors) { throw ($parseErrors | Out-String) }
+          }
       - run: python scripts/check.py
       - run: python scripts/check_api.py
       - run: python scripts/check_batches.py

@@ -15,7 +15,7 @@ if ($listener) {
         if (!$line.Contains($expected)) { throw "Le port $studioPort appartient à un autre processus. Aucun arrêt effectué." }
         $studioProcess = Get-Process -Id $processId -ErrorAction Stop
         Stop-Process -InputObject $studioProcess -ErrorAction Stop
-        if (!$studioProcess.WaitForExit(10000)) { throw 'Le serveur précédent ne s’est pas arrêté à temps.' }
+        if (!$studioProcess.WaitForExit(10000)) { throw "Le serveur précédent ne s'est pas arrêté à temps." }
     }
 }
 & (Join-Path $PSScriptRoot 'Lancer-Studio.ps1')
