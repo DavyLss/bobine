@@ -1,5 +1,7 @@
 # Local Video Studio
 
+[![Licence MIT](https://img.shields.io/badge/licence-MIT-green)](LICENSE) [![Vérifications hors ligne](https://github.com/DavyLss/local-video-studio/actions/workflows/check.yml/badge.svg)](https://github.com/DavyLss/local-video-studio/actions/workflows/check.yml)
+
 Studio vidéo pédagogique en français, exécuté sur le poste : scénario IA, voix masculine de référence, sous-titres synchronisés et animations. Interface simple : titre, description, charte, durée moyenne, format, puis génération avec suivi et historique.
 
 Deux directions conservées : **Atelier sombre** et **Éditorial clair**, avec apparitions, rebonds, objets et typographie. La dernière charte utilisée est mémorisée. Formats **Reel 1080 × 1920** et **Standard 1920 × 1080**, 30 images/s, MP4 H.264/AAC.
@@ -15,7 +17,7 @@ cd local-video-studio
 .\Lancer-Studio.ps1
 ```
 
-Ouvrir **http://127.0.0.1:8510/**. Le dépôt étant privé, il faut un compte GitHub autorisé pour le cloner. Si PowerShell bloque les scripts, ne pas modifier sa politique sans comprendre la règle du poste : les commandes Python équivalentes sont dans [INSTALLATION.md](docs/INSTALLATION.md).
+Ouvrir **http://127.0.0.1:8510/**. Si PowerShell bloque les scripts, ne pas modifier sa politique sans comprendre la règle du poste : les commandes Python équivalentes sont dans [INSTALLATION.md](docs/INSTALLATION.md).
 
 `Installer.ps1 -SkipModels` installe seulement les dépendances. `Installer.ps1 -Python 'C:/chemin/python.exe'` sélectionne explicitement un Python 3.11. Les deux environnements Python isolent les dépendances du studio et celles de Qwen.
 
@@ -66,7 +68,7 @@ Les envois sont désactivés par défaut. Après configuration, cocher les rése
 
 Les API YouTube et Instagram ne nécessitent pas d'abonnement de publication ; leurs quotas, comptes et autorisations restent applicables. Buffer et Cloudinary ont leurs propres offres et limites. Aucun achat n'est déclenché par le studio. Les accès de l'utilisateur sont indispensables pour une publication réelle ; les tests automatisés utilisent des services simulés.
 
-Les poids volumineux sont téléchargés depuis leurs sources officielles, avec révisions fixées dans [models.json](models.json). Le tag Ollama peut évoluer : son empreinte observée est indiquée dans le manifeste. Les coûts éventuels sont ceux du matériel et de l'électricité ; aucune clé API n'est nécessaire.
+Les poids volumineux sont téléchargés depuis leurs sources officielles, avec révisions fixées dans [models.json](models.json). Le tag Ollama peut évoluer : son empreinte observée est indiquée dans le manifeste. Les coûts éventuels de génération sont ceux du matériel et de l’électricité ; aucune clé API de publication n’est nécessaire pour générer localement.
 
 Les dépendances du studio sont contraintes par `requirements-lock.txt`, issu d'une installation Windows propre. Les principales versions de l'environnement voix sont fixées séparément ; ses dépendances transitives ne sont pas intégralement verrouillées.
 
@@ -105,4 +107,8 @@ Le serveur écoute exclusivement sur localhost. Ne pas l'exposer directement à 
 
 [ComfyUI](https://github.com/comfyanonymous/ComfyUI), [Wan2.2](https://github.com/Wan-Video/Wan2.2) et [MoneyPrinterTurbo](https://github.com/harry0703/MoneyPrinterTurbo) faisaient partie des expérimentations précédentes. Le studio actuel n'en dépend pas ; leurs sources et modèles ne sont pas recopiés. Voir [la stack optionnelle](docs/STACK-OPTIONNELLE.md).
 
-Les logiciels, poids et polices gardent leurs licences propres : [notices](THIRD_PARTY_NOTICES.md). Dépôt privé ; aucune licence publique de redistribution n'est accordée pour le code spécifique à cette série.
+Les logiciels, poids et polices gardent leurs licences propres : [notices](THIRD_PARTY_NOTICES.md). Le code spécifique au projet, les chartes, les exemples et la référence vocale synthétique fournie sont partagés sous [licence MIT](LICENSE), dans la mesure des droits du mainteneur. Les bibliothèques, modèles, codecs et autres composants tiers conservent leurs licences propres. La voix de référence est réutilisable et n’est pas exclusive. Voir [sa notice](assets/voice/README.md).
+
+## Contribuer et signaler un problème
+
+Consulter [CONTRIBUTING.md](CONTRIBUTING.md) pour l’environnement de développement et les tests, [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) pour les échanges et [SECURITY.md](SECURITY.md) pour les signalements confidentiels. Le projet est fourni sans garantie ni support contractuel.

@@ -1,0 +1,32 @@
+name: Signaler un bug
+description: Décrire un problème reproductible sans données confidentielles.
+title: "[Bug] "
+body:
+  - type: markdown
+    attributes:
+      value: "Pour une vulnérabilité, suivre SECURITY.md. Ne joindre aucune clé, jeton ni donnée personnelle."
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environnement
+      description: Système, version Python, commit, CPU/GPU/RAM si utile.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Étapes de reproduction
+      description: Utiliser un exemple minimal et de faux identifiants.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Résultat attendu et résultat observé
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Journaux ou captures nettoyés
+      description: Retirer les clés, jetons, liens de médias privés et informations personnelles.

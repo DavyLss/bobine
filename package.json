@@ -2,6 +2,11 @@
   "name": "local-video-studio-ui-checks",
   "private": true,
   "description": "Tests DOM de l'interface uniquement ; aucun Node.js requis pour utiliser le studio.",
-  "scripts": { "test": "node scripts/check_ui.cjs && node scripts/check_social_ui.cjs && node scripts/check_design.cjs" },
-  "devDependencies": { "jsdom": "31.0.1" }
+  "scripts": {
+    "test": "node scripts/check_ui.cjs && node scripts/check_social_ui.cjs && node scripts/check_design.cjs"
+  },
+  "devDependencies": {
+    "jsdom": "31.0.1"
+  },
+  "license": "MIT"
 }
