@@ -1,8 +1,8 @@
-# D’abord le sens — motion design pédagogique
+# D’abord le sens - motion design pédagogique
 
 ## Référence examinée
 
-https://www.youtube.com/shorts/Eo8zwQ9yxBg — « 5 SKILLS Claude Code qui vont changer ta façon de coder », TechUnlocked60.
+https://www.youtube.com/shorts/Eo8zwQ9yxBg - « 5 SKILLS Claude Code qui vont changer ta façon de coder », TechUnlocked60.
 
 Observations dans le lecteur YouTube : ouverture vers 3 et 8 secondes, plusieurs chapitres numérotés et conclusion vers 75 secondes. Fond très clair nuancé, grande typographie noire, numéros colorés en relief, cartes de contenu ombrées et mots de narration mis en avant dans le bas. Ces observations portent sur des images échantillonnées et la progression visible du lecteur ; elles ne constituent pas une analyse d’écoute ou un visionnage continu. Les sous-titres en boîte noire en haut étaient affichés par le lecteur et n’ont pas été repris comme élément de notre montage.
 

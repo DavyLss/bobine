@@ -1,4 +1,4 @@
-# Atelier sombre — série pédagogique
+# Atelier sombre - série pédagogique
 
 Intention : montrer une idée en transformant et en déplaçant quelques objets concrets sur une scène sombre.
 

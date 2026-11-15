@@ -1,4 +1,4 @@
-# Studio / — Interface de production, version 2
+# Studio / - Interface de production, version 2
 
 ## Structure
 

@@ -1,4 +1,4 @@
-# Apparitions plus marquées — V2
+# Apparitions plus marquées - V2
 
 Le script conserve la voix, le texte et la direction claire de la version précédente. Il ajoute des entrées sur des calques indépendants : titre, objet principal et groupe de mots.
 
