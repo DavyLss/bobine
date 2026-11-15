@@ -1,4 +1,4 @@
-<p align="center"><img src="studio/static/brand/logo.png" width="180" height="180" alt="Logo Local Video Studio"></p>
+<p align="center"><img src="studio/static/brand/logo-transparent.png" width="180" height="180" alt="Logo Local Video Studio"></p>
 
 # Local Video Studio
 
