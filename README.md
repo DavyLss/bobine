@@ -26,6 +26,20 @@ Ouvrir **http://127.0.0.1:8510/**. Le dépôt étant privé, il faut un compte G
 3. Lancer et suivre scénario → voix → synchronisation → rendu → vérification.
 4. Relire et écouter avant publication. Télécharger la vidéo, le scénario et les sous-titres depuis l'interface.
 
+### Générer plusieurs vidéos en séquence
+
+Choisir **Plusieurs vidéos** pour saisir jusqu'à 50 titres/descriptions, ajouter ou retirer des lignes et changer leur ordre. La charte, la durée moyenne, le format et la voix sont communs à tout le lot.
+
+Choisir **Importer un CSV** pour charger un fichier UTF-8, puis **Vérifier le fichier**. L'aperçu affiche les valeurs qui seront réellement utilisées. Télécharger le modèle dans l'interface ou partir de [cet exemple](examples/lot-devops.csv).
+
+Colonnes : `titre, description, charte, duree, format, voix` (les noms anglais `title, description, theme, duration, format, voice` sont aussi acceptés). Seuls titre et description sont obligatoires. Une cellule de réglage vide reprend la valeur commune ; une cellule remplie remplace cette valeur pour la ligne. Séparateurs acceptés : virgule, point-virgule et tabulation. Encadrer de guillemets les descriptions contenant le séparateur ou des retours à la ligne.
+
+Valeurs : charte `dark`/`light` (ou `sombre`/`clair`), durée entière de 15 à 180 secondes, format `reel`/`standard` (ou `9:16`/`16:9`), voix `Narrateur-Homme-01`. Une seule voix est actuellement installée. Les fichiers sont limités à 1 Mo et 50 vidéos ; toute erreur bloque le lot avant sa mise en file, sans génération partielle.
+
+Le panneau **Suivi des lots** affiche les vidéos dans l'ordre, l'étape courante, la progression globale, les succès, échecs et annulations, puis les liens de téléchargement. Le suivi automatique peut être désactivé pour consulter une autre vidéo. Tous les lots partagent la même file FIFO et **une seule vidéo est calculée à la fois** (100 vidéos actives/en attente au maximum).
+
+Un échec laisse les vidéos suivantes continuer. **Annuler les vidéos en attente** laisse celle en cours se terminer. **Relancer les échecs** crée un nouveau lot pour les seules vidéos échouées ou interrompues. Fermer la page ne coupe pas la génération tant que le serveur fonctionne. Après un arrêt du serveur, les travaux inachevés sont marqués interrompus et peuvent être relancés ; ils ne reprennent pas automatiquement au milieu d'un rendu.
+
 La durée est une cible : la voix garde son rythme et ses pauses. Le moteur sélectionne huit compositions animées ; il ne génère pas librement des personnages 3D ni une mise en scène originale complète pour chaque sujet. Les modèles peuvent produire des erreurs et des variations de voix malgré la référence fixe.
 
 ## Stack incluse
@@ -57,13 +71,20 @@ Les sources historiques personnalisées dans `examples/sources/` documentent les
 
 Pour réutiliser des modèles déjà installés, définir `STUDIO_MODELS_DIR` vers le dossier contenant `Qwen3-TTS-1.7B-Base/` et `whisper-base/`. `STUDIO_VOICE_PYTHON` peut désigner un environnement Qwen existant. Voir [.env.example](.env.example) pour tous les réglages. Ce fichier n'est pas chargé automatiquement.
 
+Les mêmes réglages peuvent être conservés dans `.local/config.json` (clés `STUDIO_PORT`, `STUDIO_MODELS_DIR`, etc.). Les variables d'environnement ont priorité. Ce fichier propre au poste est ignoré par Git ; il ne migre pas les chemins d'une machine vers une autre.
+
 ## Vérification
 
 ```powershell
 .venv/Scripts/python.exe scripts/check.py
+.venv/Scripts/python.exe -m pip install -r requirements-test.txt -c requirements-lock.txt
+.venv/Scripts/python.exe scripts/check_api.py
+.venv/Scripts/python.exe scripts/check_batches.py
 ```
 
 Le contrôle hors ligne vérifie l'intégrité du profil vocal, les 32 combinaisons de rendu (8 compositions × 2 chartes × 2 formats), la configuration et un export court CPU. Il ne télécharge pas les modèles et ne certifie pas la qualité d'une nouvelle narration. [État des validations](docs/VALIDATION.md).
+
+Les tests de lots utilisent de vrais sous-processus de simulation pour vérifier l'ordre et la reprise après échec, sans lancer les modèles IA. Les tests DOM de l'interface sont facultatifs pour le développement : Node.js 24.15+ (branche 24), `npm ci`, puis `npm test`. Node.js n'est pas requis pour utiliser le studio.
 
 Le serveur écoute exclusivement sur localhost. Ne pas l'exposer directement à Internet. Les fichiers de travail ne sont pas sauvegardés sur GitHub : sauvegarder séparément `.local/` si nécessaire.
 

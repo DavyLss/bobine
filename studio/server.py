@@ -2,13 +2,12 @@
 from pathlib import Path
 import copy,json,os,queue,re,subprocess,sys,threading,time,uuid
 from contextlib import asynccontextmanager
-from typing import Literal
 from fastapi import FastAPI,HTTPException,Request
-from fastapi.responses import FileResponse,JSONResponse
+from fastapi.responses import FileResponse,JSONResponse,Response
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.trustedhost import TrustedHostMiddleware
-from pydantic import BaseModel,Field
 import requests
+from batches import VideoSettings,VideoRequest,BatchRequest,VOICES,MAX_PENDING,validate_batch,batch_summary
 
 from config import ROOT,DATA,JOBS,MODELS,VOICE,VOICE_PYTHON,PORT,OLLAMA_URL,OLLAMA_MODEL
 HERE=Path(__file__).resolve().parent
@@ -17,6 +16,8 @@ LOCK=threading.RLock();PENDING=queue.Queue();ACTIVE={};STATE=DATA/'state.json'
 def atomic(path,data):
     temp=path.with_suffix('.tmp');temp.write_text(json.dumps(data,ensure_ascii=False,indent=2),encoding='utf-8');temp.replace(path)
 state=json.loads(STATE.read_text(encoding='utf-8')) if STATE.exists() else {'settings':{'theme':'dark','duration':90,'format':'reel'},'jobs':[]}
+state.setdefault('batches',[])
+state['settings'].setdefault('voice','Narrateur-Homme-01')
 for j in state['jobs']:
     if j['status'] in ['queued','running']:
         j.update(status='interrupted',message='Le studio a été arrêté. Vous pouvez relancer cette vidéo.')
@@ -31,6 +32,7 @@ def update(key,**values):
 def worker():
     while True:
         key=PENDING.get()
+        process=None
         try:
             with LOCK:
                 job=find(key)
@@ -42,7 +44,9 @@ def worker():
                 for line in process.stdout:
                     log.write(line);log.flush()
                     if line.startswith('@studio '):
-                        event=json.loads(line[8:])
+                        try:event=json.loads(line[8:])
+                        except json.JSONDecodeError:continue
+                        if not isinstance(event,dict):continue
                         with LOCK:
                             if find(key)['status']=='running':update(key,**{k:v for k,v in event.items() if k in ['stage','message','progress','actual_duration','scene_count','warning']})
             code=process.wait()
@@ -55,6 +59,8 @@ def worker():
         except Exception as e:
             update(key,status='failed',message=str(e))
         finally:
+            # Never release the queue while a pipeline is still alive after a reader/log error.
+            if process is not None and process.poll() is None:process.communicate()
             ACTIVE.pop(key,None);PENDING.task_done()
 
 @asynccontextmanager
@@ -69,15 +75,13 @@ async def local_write(request:Request,call_next):
         origin=request.headers.get('origin')
         if origin and origin not in [f'http://127.0.0.1:{PORT}',f'http://localhost:{PORT}']:return JSONResponse({'detail':'Origine refusée.'},403)
     return await call_next(request)
-class VideoRequest(BaseModel):
-    title:str=Field(min_length=3,max_length=120)
-    description:str=Field(min_length=10,max_length=6000)
-    theme:Literal['dark','light']='dark'
-    duration:int=Field(default=90,ge=15,le=180)
-    format:Literal['reel','standard']='reel'
 @app.get('/api/state')
 def get_state():
-    with LOCK:return copy.deepcopy(state)
+    with LOCK:
+        snapshot=copy.deepcopy(state)
+        snapshot['batches']=[batch_summary(batch,snapshot['jobs']) for batch in snapshot['batches']]
+        snapshot['voices']=VOICES
+        return snapshot
 @app.get('/api/health')
 def health():
     try:
@@ -89,14 +93,74 @@ def health():
     return {'llm':llm,'voice':voice,'whisper':whisper,'ready':llm and voice and whisper}
 @app.post('/api/jobs',status_code=201)
 def create(body:VideoRequest):
-    payload=body.model_dump();payload['title']=payload['title'].strip();payload['description']=payload['description'].strip()
-    if len(payload['title'])<3 or len(payload['description'])<10:raise HTTPException(422,'Ajoutez un titre et une description suffisamment précis.')
+    return enqueue([body.model_dump()],body.model_dump(include=set(VideoSettings.model_fields)))[0]
+
+def enqueue(items,settings,batch=None):
+    """Persist the whole submission before exposing any item to the single worker."""
     with LOCK:
-        if sum(j['status'] in ['queued','running'] for j in state['jobs'])>=5:raise HTTPException(409,'Cinq vidéos sont déjà en cours ou en attente.')
-        key=uuid.uuid4().hex;folder=JOBS/key;folder.mkdir();atomic(folder/'Request.json',payload)
-        job={'id':key,**payload,'status':'queued','stage':'queued','progress':0,'message':'En attente de génération.','created':time.time(),'updated':time.time()}
-        state['jobs'].insert(0,job);state['settings']={k:payload[k] for k in ['theme','duration','format']};save();PENDING.put(key)
-        return copy.deepcopy(job)
+        if sum(j['status'] in ['queued','running'] for j in state['jobs'])+len(items)>MAX_PENDING:raise HTTPException(409,f'La file accepte au maximum {MAX_PENDING} vidéos en cours ou en attente.')
+        jobs=[];folders=[];previous=copy.deepcopy(state)
+        try:
+            for index,payload in enumerate(items):
+                key=uuid.uuid4().hex;folder=JOBS/key;folder.mkdir();folders.append(folder);atomic(folder/'Request.json',payload)
+                job={'id':key,**payload,'status':'queued','stage':'queued','progress':0,'message':'En attente de génération.','created':time.time(),'updated':time.time()}
+                if batch:job.update(batch_id=batch['id'],batch_index=index+1)
+                jobs.append(job)
+            state['jobs'][0:0]=jobs
+            if batch:state['batches'].insert(0,batch)
+            state['settings']=settings;save()
+        except Exception:
+            state.clear();state.update(previous)
+            for folder in folders:
+                for child in folder.iterdir():child.unlink()
+                folder.rmdir()
+            raise
+        for job in jobs:PENDING.put(job['id'])
+        return copy.deepcopy(jobs)
+
+def batch_items(body):
+    try:return validate_batch(body)
+    except ValueError as error:raise HTTPException(422,str(error)) from error
+
+@app.get('/api/batches/template.csv')
+def csv_template():
+    content='titre;description;charte;duree;format;voix\r\nC’est quoi le DevOps ?;Expliquer la collaboration avec un exemple concret.;;;;\r\nLes trois voies du DevOps;Expliquer le flux, le feedback et l’apprentissage continu.;light;60;reel;Narrateur-Homme-01\r\n'
+    return Response('\ufeff'+content,media_type='text/csv; charset=utf-8',headers={'Content-Disposition':'attachment; filename="modele-videos.csv"'})
+
+@app.post('/api/batches/preview')
+def preview_batch(body:BatchRequest):
+    items,lines=batch_items(body)
+    return {'items':items,'lines':lines,'total':len(items)}
+
+@app.post('/api/batches',status_code=201)
+def create_batch(body:BatchRequest):
+    items,_=batch_items(body)
+    batch={'id':uuid.uuid4().hex,'name':body.name.strip() or f'Lot de {len(items)} vidéos','created':time.time(),'defaults':body.defaults.model_dump()}
+    jobs=enqueue(items,body.defaults.model_dump(),batch)
+    return batch_summary(batch,jobs)
+
+def find_batch(key):
+    batch=next((batch for batch in state['batches'] if batch['id']==key),None)
+    if batch is None:raise HTTPException(404,'Lot introuvable.')
+    return batch
+
+@app.post('/api/batches/{key}/cancel-pending')
+def cancel_pending(key:str):
+    with LOCK:
+        batch=find_batch(key)
+        for job in state['jobs']:
+            if job.get('batch_id')==key and job['status']=='queued':job.update(status='cancelled',message='Annulée avant génération.',updated=time.time())
+        save();return batch_summary(batch,state['jobs'])
+
+@app.post('/api/batches/{key}/retry',status_code=201)
+def retry_batch(key:str):
+    with LOCK:
+        batch=find_batch(key)
+        jobs=sorted((job for job in state['jobs'] if job.get('batch_id')==key and job['status'] in ['failed','interrupted']),key=lambda job:job['batch_index'])
+        if not jobs:raise HTTPException(409,'Aucun échec à relancer dans ce lot.')
+        items=[VideoRequest.model_validate({field:job.get(field,'Narrateur-Homme-01') for field in VideoRequest.model_fields}).model_dump() for job in jobs]
+        new={'id':uuid.uuid4().hex,'name':('Reprise · '+batch['name'])[:120],'created':time.time(),'defaults':batch['defaults']}
+        return batch_summary(new,enqueue(items,new['defaults'],new))
 @app.post('/api/jobs/{key}/cancel')
 def cancel(key:str):
     with LOCK:

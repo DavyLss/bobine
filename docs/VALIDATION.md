@@ -23,3 +23,13 @@ Pour relancer les contrôles :
 ```
 
 L'export de contrôle utilise une sinusoïde, pas la narration IA ; il vérifie le conteneur et la piste audio, pas la qualité de la voix.
+
+## Extension lots et CSV
+
+- Validation UTF-8/BOM, séparateurs, guillemets, descriptions sur plusieurs lignes, aliases français/anglais, valeurs communes et remplacements par ligne.
+- Refus intégral des lots invalides sans créer de tâches ni de dossiers de vidéos ; limite de 50 vidéos.
+- Tests API avec de vrais sous-processus de simulation : ordre FIFO entre lots, un seul calcul à la fois, poursuite après échec, relance des seuls échecs, annulation des attentes conservant le travail en cours, compatibilité vidéo seule et restauration des statuts interrompus après redémarrage.
+- Tests DOM avec jsdom : saisie et réordonnancement, réglages, import et aperçu CSV, invalidation de l'aperçu après changement des paramètres, gestion des erreurs, suivi de progression et sélection manuelle, annulation, protection contre l'injection HTML, navigation clavier des onglets.
+- Aucun test de lot ne lance les modèles IA. Les tests DOM ne remplacent pas un contrôle visuel dans un navigateur.
+
+Le lancement automatique local de cette nouvelle version a été refusé par le contrôle d'approbation (« blocked by policy »). Le studio a été installé et ses réglages locaux préparés pour le port 8511 ; ouvrir manuellement `Lancer-Studio.ps1` pour contrôler son rendu dans le navigateur. L'ancien service 8510 n'a pas été modifié.
