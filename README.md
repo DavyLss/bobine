@@ -10,6 +10,8 @@ Deux directions conservées : **Atelier sombre** et **Éditorial clair**, avec a
 
 ## Aperçu du studio
 
+Captures de l’interface actualisées le 15 novembre 2026.
+
 **Création en trois étapes** : sujet, réalisation et diffusion, avec moniteur de prévisualisation.
 
 ![Écran de création : étapes du formulaire, commandes de production et aperçu vidéo](docs/screenshots/creation.png)
