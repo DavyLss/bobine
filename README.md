@@ -1,3 +1,5 @@
+<p align="center"><img src="studio/static/brand/logo.png" width="180" height="180" alt="Logo Local Video Studio"></p>
+
 # Local Video Studio
 
 [![Licence MIT](https://img.shields.io/badge/licence-MIT-green)](LICENSE) [![Vérifications hors ligne](https://github.com/DavyLss/local-video-studio/actions/workflows/check.yml/badge.svg)](https://github.com/DavyLss/local-video-studio/actions/workflows/check.yml)
