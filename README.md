@@ -6,6 +6,25 @@ Studio vidéo pédagogique en français, exécuté sur le poste : scénario IA, 
 
 Deux directions conservées : **Atelier sombre** et **Éditorial clair**, avec apparitions, rebonds, objets et typographie. La dernière charte utilisée est mémorisée. Formats **Reel 1080 × 1920** et **Standard 1920 × 1080**, 30 images/s, MP4 H.264/AAC.
 
+## Aperçu du studio
+
+**Création en trois étapes** : sujet, réalisation et diffusion, avec moniteur de prévisualisation.
+
+![Écran de création : étapes du formulaire, commandes de production et aperçu vidéo](docs/screenshots/creation.png)
+
+<details>
+<summary>Voir la bibliothèque et les commandes de production</summary>
+
+**Bibliothèque** : miniatures des vidéos, paramètres et état de publication.
+
+![Bibliothèque des vidéos générées avec miniatures et statuts](docs/screenshots/bibliotheque.png)
+
+**File de production** : pause, reprise, suppression de l’attente et arrêt forcé. Les commandes sans tâche correspondante sont désactivées.
+
+![File de production avec les commandes de pause, vidage de l’attente et arrêt forcé](docs/screenshots/production.png)
+
+</details>
+
 ## Installation Windows
 
 Prérequis : [Python 3.11 64 bits](https://www.python.org/downloads/), [Git](https://git-scm.com/downloads) et [Ollama](https://ollama.com/download). Lancer Ollama avant l'installation. Prévoir plusieurs gigaoctets de téléchargements et de stockage ; 16 Go de RAM minimum conseillé, 32 Go préférable. La voix fonctionne sur CPU et peut prendre plusieurs minutes par vidéo. Un GPU NVIDIA compatible accélère le rendu ; le CPU est utilisé automatiquement si NVENC est indisponible.
