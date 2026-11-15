@@ -6,7 +6,7 @@ $studioPort = if ($env:STUDIO_PORT) { [int]$env:STUDIO_PORT } elseif ($localConf
 $listener = Get-NetTCPConnection -LocalPort $studioPort -State Listen -ErrorAction SilentlyContinue
 if ($listener) {
     $state = Invoke-RestMethod "http://127.0.0.1:$studioPort/api/state" -TimeoutSec 5
-    $active = @($state.jobs | Where-Object { $_.status -in @('queued','running') -or $_.publication.status -in @('queued','preparing','sending','uploading') })
+    $active = @($state.jobs | Where-Object { ($_.status -eq 'running' -or ($_.status -eq 'queued' -and !$state.production_paused)) -or $_.publication.status -in @('queued','preparing','sending','uploading') })
     if ($active.Count) { throw 'Une génération ou un transfert est actif. Attendre sa fin avant le redémarrage.' }
     $expected = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot 'studio/server.py')).Replace('\','/').ToLowerInvariant()
     foreach ($processId in @($listener.OwningProcess | Select-Object -Unique)) {

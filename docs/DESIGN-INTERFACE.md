@@ -5,7 +5,7 @@
 Quatre écrans locaux, accessibles par URL :
 
 - `#create` : composition en trois étapes (sujet, réalisation, diffusion). Les réglages restent en mémoire lors des changements d’étape. Le moniteur et le suivi de génération restent à côté du formulaire.
-- `#batch-monitor` : suivi des lots, annulation de l’attente et reprise des échecs ; état vide avec accès à la création d’un lot.
+- `#batch-monitor` : contrôle global de la production (pause durable, reprise, purge de l’attente, arrêt forcé), liste des vidéos à venir avec retrait individuel, suivi des lots et reprise des échecs. Les commandes globales sont aussi disponibles dans l’écran de création.
 - `#history` : bibliothèque avec les vrais posters locaux, paramètres, statut et suivi de diffusion. Sélectionner une vidéo ouvre son moniteur et son kit de publication.
 - `#publication-settings` : un service visible à la fois, conservation du formulaire et des clés existantes lors des changements d’onglet.
 

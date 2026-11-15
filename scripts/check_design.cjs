@@ -15,4 +15,16 @@ w.location.hash='#batch-monitor';w.dispatchEvent(new w.HashChangeEvent('hashchan
 $('create-batch').click();w.dispatchEvent(new w.HashChangeEvent('hashchange'));assert.equal(d.body.dataset.view,'create');assert(!panels[0].hidden);
 const providers=[...d.querySelectorAll('[data-provider]')],cards=[...d.querySelectorAll('.integration-card')];providers[3].click();assert(!cards[3].hidden);assert(cards[2].hidden);assert.equal(cards.filter(c=>!c.hidden).length,1);
 $('new').click();assert(!panels[0].hidden);assert.equal(d.querySelectorAll('#generate').length,1);assert.equal(d.querySelectorAll('#voice').length,1);
-dom.window.close();console.log('OK: three-step validation, back navigation, routes, empty queue, provider tabs, summary and form controls.');
+(async()=>{
+ const state={production:{paused:false,pending:1,active_id:'running'},jobs:[{id:'running',title:'Vidéo en cours',status:'running',progress:30,created:1},{id:'waiting',title:'Vidéo suivante',status:'queued',created:2}]},calls=[];
+ const emit=()=>w.dispatchEvent(new w.CustomEvent('studio-state',{detail:structuredClone(state)}));
+ w.fetch=async(url,options={})=>{calls.push({url,method:options.method});if(url.endsWith('/pause'))state.production.paused=true;if(url.endsWith('/resume'))state.production.paused=false;if(url.endsWith('/clear')){state.jobs=state.jobs.filter(j=>j.status!=='queued');state.production.pending=0;}if(url.endsWith('/stop-current')){state.production.paused=true;state.production.active_id=null;state.jobs=state.jobs.filter(j=>j.status!=='running');}return {ok:true,json:async()=>url==='/api/state'?structuredClone(state):{cancelled:1}};};
+ const settle=async()=>{for(let i=0;i<8;i++)await new Promise(resolve=>setImmediate(resolve));};
+ emit();assert.match($('production-status').textContent,/en cours/);assert.equal($('production-jobs').children.length,2);
+ $('pause-production').click();await settle();assert.match($('production-status').textContent,/Pause après/);assert.match($('pause-production').textContent,/Reprendre/);
+ $('pause-production').click();await settle();assert.equal(state.production.paused,false);
+ $('clear-production').click();await settle();assert.equal(state.jobs.length,1);assert.equal(state.jobs[0].status,'running');assert($('clear-production').disabled);
+ $('stop-production').click();await settle();assert.equal(state.production.paused,true);assert($('stop-production').disabled);assert.match($('production-status').textContent,/en pause/);
+ assert(calls.filter(c=>c.method==='POST').every(c=>c.url.startsWith('/api/queue/')));
+ dom.window.close();console.log('OK: composer, routes, provider tabs, pause/resume, clear pending, stop current and production feedback.');
+})().catch(error=>{console.error(error);dom.window.close();process.exitCode=1;});

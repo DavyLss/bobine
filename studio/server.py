@@ -1,6 +1,6 @@
 """Local-only video studio. Run with the project's existing Python environment."""
 from pathlib import Path
-import copy,json,os,queue,re,subprocess,sys,threading,time,uuid
+import copy,json,os,queue,re,signal,subprocess,sys,threading,time,uuid
 from contextlib import asynccontextmanager
 from fastapi import FastAPI,HTTPException,Request
 from fastapi.responses import FileResponse,JSONResponse,Response
@@ -19,16 +19,21 @@ HERE=Path(__file__).resolve().parent
 DATA.mkdir(parents=True,exist_ok=True);JOBS.mkdir(parents=True,exist_ok=True)
 LOCK=threading.RLock();PENDING=queue.Queue();ACTIVE={};STATE=DATA/'state.json'
 SOCIAL_PENDING=queue.Queue();SOCIAL_ACTIVE=set()
+PRODUCTION=threading.Condition(LOCK)
 def atomic(path,data):
     temp=path.with_suffix('.tmp');temp.write_text(json.dumps(data,ensure_ascii=False,indent=2),encoding='utf-8');temp.replace(path)
 state=json.loads(STATE.read_text(encoding='utf-8')) if STATE.exists() else {'settings':{'theme':'dark','duration':90,'format':'reel'},'jobs':[]}
 state.setdefault('batches',[])
+state.setdefault('production_paused',False)
 state['settings'].setdefault('voice','Narrateur-Homme-01')
 for j in state['jobs']:
-    if j['status'] in ['queued','running']:
+    if j['status']=='running':
         j.update(status='interrupted',message='Le studio a été arrêté. Vous pouvez relancer cette vidéo.')
     if j.get('publication',{}).get('status') in ['queued','preparing','sending','uploading']:
         j['publication'].update(status='interrupted',message='Envoi interrompu. Contrôler les reçus avant une reprise manuelle.')
+for j in sorted(state['jobs'],key=lambda job:job['created']):
+    if j['status']=='queued':PENDING.put(j['id'])
+
 def save():atomic(STATE,state)
 def find(key):
     job=next((j for j in state['jobs'] if j['id']==key),None)
@@ -44,9 +49,10 @@ def worker():
         try:
             with LOCK:
                 job=find(key)
+                while state['production_paused'] and job['status']=='queued':PRODUCTION.wait()
                 if job['status']!='queued':continue
                 update(key,status='running',stage='scenario',message='Préparation du scénario…',progress=2)
-                process=subprocess.Popen([sys.executable,'-u',str(HERE/'pipeline.py'),str(JOBS/key)],cwd=ROOT,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,encoding='utf-8',errors='replace',env={**os.environ,'PYTHONIOENCODING':'utf-8'},creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0))
+                process=subprocess.Popen([sys.executable,'-u',str(HERE/'pipeline.py'),str(JOBS/key)],cwd=ROOT,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,encoding='utf-8',errors='replace',env={**os.environ,'PYTHONIOENCODING':'utf-8'},start_new_session=os.name!='nt',creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0))
                 ACTIVE[key]=process
             with (JOBS/key/'generation.log').open('a',encoding='utf-8') as log:
                 for line in process.stdout:
@@ -69,11 +75,13 @@ def worker():
                         error=(JOBS/key/'error.txt').read_text(encoding='utf-8') if (JOBS/key/'error.txt').exists() else 'La génération a été interrompue. Consultez le journal pour le détail.'
                         update(key,status='failed',message=error[-1500:])
         except Exception as e:
-            update(key,status='failed',message=str(e))
+            with LOCK:
+                if find(key)['status']!='cancelled':update(key,status='failed',message=str(e))
         finally:
             # Never release the queue while a pipeline is still alive after a reader/log error.
             if process is not None and process.poll() is None:process.communicate()
-            ACTIVE.pop(key,None);PENDING.task_done()
+            with LOCK:ACTIVE.pop(key,None)
+            PENDING.task_done()
 
 @asynccontextmanager
 async def lifespan(app):
@@ -93,6 +101,7 @@ def get_state():
         snapshot=copy.deepcopy(state)
         snapshot['batches']=[batch_summary(batch,snapshot['jobs']) for batch in snapshot['batches']]
         snapshot['voices']=VOICES
+        snapshot['production']=production_status()
         return snapshot
 @app.get('/api/health')
 def health():
@@ -169,7 +178,7 @@ def cancel_pending(key:str):
         batch=find_batch(key)
         for job in state['jobs']:
             if job.get('batch_id')==key and job['status']=='queued':job.update(status='cancelled',message='Annulée avant génération.',updated=time.time())
-        save();return batch_summary(batch,state['jobs'])
+        save();PRODUCTION.notify_all();return batch_summary(batch,state['jobs'])
 
 @app.post('/api/batches/{key}/retry',status_code=201)
 def retry_batch(key:str):
@@ -180,17 +189,58 @@ def retry_batch(key:str):
         items=[VideoRequest.model_validate({field:job.get(field,'Narrateur-Homme-01') for field in VideoRequest.model_fields}).model_dump() for job in jobs]
         new={'id':uuid.uuid4().hex,'name':('Reprise · '+batch['name'])[:120],'created':time.time(),'defaults':batch['defaults']}
         return batch_summary(new,enqueue(items,new['defaults'],new))
-@app.post('/api/jobs/{key}/cancel')
-def cancel(key:str):
-    with LOCK:
+def production_status():
+    active=next((key for key,process in ACTIVE.items() if process.poll() is None),None)
+    return {'paused':state['production_paused'],'pending':sum(j['status']=='queued' for j in state['jobs']),'active_id':active}
+
+@app.post('/api/queue/pause')
+def pause_production():
+    with PRODUCTION:
+        state['production_paused']=True;save();PRODUCTION.notify_all();return production_status()
+
+@app.post('/api/queue/resume')
+def resume_production():
+    with PRODUCTION:
+        state['production_paused']=False;save();PRODUCTION.notify_all();return production_status()
+
+@app.post('/api/queue/clear')
+def clear_production():
+    with PRODUCTION:
+        count=0
+        for job in state['jobs']:
+            if job['status']=='queued':job.update(status='cancelled',message='Retirée de la file avant génération.',updated=time.time());count+=1
+        save();PRODUCTION.notify_all();return {**production_status(),'cancelled':count}
+
+def stop_job(key):
+    with PRODUCTION:
         job=find(key)
-        if job['status'] not in ['queued','running']:raise HTTPException(409,'Cette génération est déjà terminée.')
         process=ACTIVE.get(key)
-        update(key,status='cancelled',message='Génération annulée. Les fichiers intermédiaires sont conservés.')
+        if job['status'] not in ['queued','running'] and not(process and process.poll() is None):raise HTTPException(409,'Cette génération est déjà terminée.')
+        update(key,status='cancelled',message='Arrêt demandé. Les fichiers intermédiaires sont conservés.')
+        PRODUCTION.notify_all()
         if process and process.poll() is None:
-            if os.name=='nt':subprocess.run(['taskkill','/PID',str(process.pid),'/T','/F'],capture_output=True,creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0))
-            else:process.terminate()
-    return {'ok':True}
+            if os.name=='nt':
+                subprocess.run(['taskkill','/PID',str(process.pid),'/T','/F'],capture_output=True,timeout=15,creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0))
+            else:
+                try:os.killpg(process.pid,signal.SIGKILL)
+                except ProcessLookupError:pass
+            try:process.wait(timeout=5)
+            except subprocess.TimeoutExpired:raise HTTPException(503,'Arrêt non confirmé. La file reste bloquée tant que le processus est actif.')
+        update(key,message='Génération arrêtée. Les fichiers intermédiaires sont conservés.')
+        return {'ok':True}
+
+@app.post('/api/jobs/{key}/cancel')
+def cancel(key:str):return stop_job(key)
+
+@app.post('/api/queue/stop-current')
+def stop_current():
+    # Pause first so a blocked video's successor cannot start during the stop.
+    with PRODUCTION:
+        state['production_paused']=True;save()
+        key=production_status()['active_id'] or next((j['id'] for j in state['jobs'] if j['status']=='running'),None)
+        if key:stop_job(key)
+        PRODUCTION.notify_all();return {**production_status(),'stopped_id':key}
+
 @app.get('/api/jobs/{key}/files/{name}')
 def file(key:str,name:str,download:bool=False):
     with LOCK:find(key)

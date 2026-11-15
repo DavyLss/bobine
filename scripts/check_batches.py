@@ -29,6 +29,7 @@ sys.exit(1 if request['title'].startswith('FAIL') else 0)
 ''',encoding='utf-8')
     real_popen=subprocess.Popen
     def fake_popen(command,**kwargs):
+        if command[0]=='taskkill':return real_popen(command,**kwargs)
         assert Path(command[2]).name=='pipeline.py'
         return real_popen([sys.executable,'-u',str(fake),command[3]],**kwargs)
     server.subprocess.Popen=fake_popen
@@ -104,6 +105,47 @@ sys.exit(1 if request['title'].startswith('FAIL') else 0)
         assert result.status_code==200 and result.json()['counts']['cancelled']==2 and result.json()['counts']['running']==1
         time.sleep(.1)
         assert 'À annuler' not in (root/'events.txt').read_text(encoding='utf-8')
+        wait_finished(client,lot['id'])
+        # Pause is a gate between videos: finish current, retain FIFO, then resume.
+        gate=post(client,'/api/batches',{'items':[{'title':title,'description':'Une description pour tester la pause.'} for title in ['Bloquant','Après pause']]}).json()
+        limit=time.monotonic()+5
+        while time.monotonic()<limit and not any(j.get('batch_id')==gate['id'] and j['status']=='running' for j in server.state['jobs']):time.sleep(.02)
+        assert post(client,'/api/queue/pause',{}).json()['paused']
+        time.sleep(1.9)
+        current=[j for j in server.state['jobs'] if j.get('batch_id')==gate['id']]
+        assert [j['status'] for j in current]==['done','queued'],current
+        assert json.loads(server.STATE.read_text(encoding='utf-8'))['production_paused']
+        assert post(client,'/api/queue/resume',{}).json()['paused'] is False
+        wait_finished(client,gate['id'])
+        # Remove a queued item already held by the paused worker, then clear the rest.
+        post(client,'/api/queue/pause',{})
+        clearing=post(client,'/api/batches',{'items':[{'title':title,'description':'Une description pour tester le retrait.'} for title in ['Retirer une','Retirer deux','Retirer trois']]}).json()
+        time.sleep(.1)
+        assert post(client,f"/api/jobs/{clearing['job_ids'][0]}/cancel",{}).status_code==200
+        assert post(client,'/api/queue/clear',{}).json()['cancelled']==2
+        assert not any(j['status']=='queued' for j in server.state['jobs'])
+        # A force stop terminates the running process and pauses before its successor.
+        post(client,'/api/queue/resume',{})
+        stopping=post(client,'/api/batches',{'items':[{'title':title,'description':'Une description pour tester l’arrêt.'} for title in ['Bloquant','Après arrêt']]}).json()
+        limit=time.monotonic()+5
+        while time.monotonic()<limit and not any(j.get('batch_id')==stopping['id'] and j['status']=='running' for j in server.state['jobs']):time.sleep(.02)
+        with server.LOCK:process=server.ACTIVE[stopping['job_ids'][0]]
+        stopped=post(client,'/api/queue/stop-current',{})
+        assert stopped.status_code==200,stopped.text
+        assert stopped.json()['paused'] and process.poll() is not None
+        time.sleep(.2)
+        assert server.find(stopping['job_ids'][0])['status']=='cancelled'
+        assert server.find(stopping['job_ids'][1])['status']=='queued'
+        post(client,'/api/queue/resume',{});wait_finished(client,stopping['id'])
+        # Clearing pending work never kills the current video.
+        preserving=post(client,'/api/batches',{'items':[{'title':title,'description':'Une description pour tester la purge.'} for title in ['Bloquant','À vider']]}).json()
+        limit=time.monotonic()+5
+        while time.monotonic()<limit and server.find(preserving['job_ids'][0])['status']!='running':time.sleep(.02)
+        cleared=post(client,'/api/queue/clear',{})
+        assert cleared.json()['cancelled']==1
+        assert server.find(preserving['job_ids'][0])['status']=='running'
+        wait_finished(client,preserving['id'])
+        assert client.post('/api/queue/clear',json={}).status_code==403
         # Single video remains backward compatible and gets the explicit fixed voice.
         job=post(client,'/api/jobs',{'title':'Une seule','description':'Une description suffisamment longue.'})
         assert job.status_code==201 and job.json()['voice']=='Narrateur-Homme-01'
@@ -114,8 +156,9 @@ sys.exit(1 if request['title'].startswith('FAIL') else 0)
     # A service restart preserves batches and exposes interrupted work for retry.
     restart=root/'restart';restart.mkdir()
     state=json.loads(server.STATE.read_text(encoding='utf-8'))
-    for job in state['jobs'][:2]:job['status']='queued'
+    state['production_paused']=True
+    state['jobs'][0]['status']='queued';state['jobs'][1]['status']='running'
     (restart/'state.json').write_text(json.dumps(state),encoding='utf-8')
-    code="import sys;sys.path.insert(0,sys.argv[1]);import server;assert all(j['status']=='interrupted' for j in server.state['jobs'][:2]);assert len(server.get_state()['batches'])==len(server.state['batches'])"
+    code="import sys;sys.path.insert(0,sys.argv[1]);import server;assert server.state['production_paused'];assert server.state['jobs'][0]['status']=='queued';assert server.state['jobs'][1]['status']=='interrupted';assert server.PENDING.qsize()==1;assert len(server.get_state()['batches'])==len(server.state['batches'])"
     subprocess.run([sys.executable,'-c',code,str(ROOT/'studio')],env={**os.environ,'STUDIO_DATA_DIR':str(restart)},check=True)
-print('OK : CSV, atomicité de validation, réglages, FIFO séquentiel, poursuite après échec, reprise et annulation du lot.')
+print('OK : CSV, atomicité de validation, réglages, FIFO séquentiel, poursuite après échec, reprise, pause durable, retrait, purge et arrêt forcé.')
