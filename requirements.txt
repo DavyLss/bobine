@@ -5,6 +5,6 @@ moviepy==2.2.1
 Pillow==11.3.0
 numpy==2.4.6
 soundfile==0.14.0
-faster-whisper==1.1.0
+faster-whisper==1.2.1
 imageio-ffmpeg==0.6.0
 huggingface-hub==0.36.0
