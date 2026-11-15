@@ -3,7 +3,7 @@ const dom=new JSDOM(fs.readFileSync('studio/static/index.html','utf8'),{url:'htt
 w.scrollTo=()=>{};w.HTMLElement.prototype.reportValidity=function(){return this.checkValidity()};
 w.eval(fs.readFileSync('studio/static/design.js','utf8'));
 const links=[...d.querySelectorAll('.rail nav a')],panels=[...d.querySelectorAll('.composer-panel')];
-assert.equal(d.querySelector('.right-column').parentElement.className,'layout');assert.equal(links.length,4);assert(links.every(l=>l.getAttribute('aria-label')));assert.equal(d.body.dataset.view,'create');
+assert.equal(d.querySelector('.right-column').parentElement.className,'layout');assert.equal(links.length,5);assert(links.every(l=>l.getAttribute('aria-label')));assert.equal(d.body.dataset.view,'create');
 assert.equal(panels.filter(p=>!p.hidden).length,1);assert(!panels[0].hidden);
 $('composer-next').click();assert(!panels[0].hidden,'Invalid subject must stay visible');
 $('title').value='Le DevOps';$('description').value='Expliquer les trois voies avec un exemple concret.';

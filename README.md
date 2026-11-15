@@ -65,6 +65,21 @@ Dans **File de production**, vous pouvez retirer une seule vidéo en attente ou 
 
 La durée est une cible : la voix garde son rythme et ses pauses. Le moteur sélectionne huit compositions animées ; il ne génère pas librement des personnages 3D ni une mise en scène originale complète pour chaque sujet. Les modèles peuvent produire des erreurs et des variations de voix malgré la référence fixe.
 
+## Publications en masse et calendrier
+
+L’onglet **Publications** permet de choisir jusqu’à 50 vidéos terminées ou d’importer plusieurs fichiers externes (MP4, MOV, M4V, WebM, MKV ; 500 Mo et 10 minutes maximum par fichier). Les imports sont convertis localement, puis leurs textes restent à compléter avant diffusion.
+
+Choisir les réseaux communs, préparer les textes par vidéo et publier en séquence ou répartir les dates à partir d’une première échéance et d’un intervalle. Le calendrier mensuel permet de consulter les statuts, déplacer une date et annuler un plan encore en attente.
+
+**Planification locale : le PC et le studio doivent rester allumés.** Une échéance manquée demande une reprogrammation ; les vidéos ne sont pas renvoyées automatiquement en cas de résultat incertain. Voir [le guide de planification](docs/PLANIFICATION.md).
+
+<details>
+<summary>Voir l’espace Publications et son calendrier</summary>
+
+![Publications en masse, import de vidéos, réglages de diffusion et calendrier mensuel](docs/screenshots/publications.png)
+
+</details>
+
 ## Stack incluse
 
 | Étape | Outil local |

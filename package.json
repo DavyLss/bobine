@@ -3,7 +3,7 @@
   "private": true,
   "description": "Tests DOM de l'interface uniquement ; aucun Node.js requis pour utiliser le studio.",
   "scripts": {
-    "test": "node scripts/check_ui.cjs && node scripts/check_social_ui.cjs && node scripts/check_design.cjs"
+    "test": "node scripts/check_ui.cjs && node scripts/check_social_ui.cjs && node scripts/check_design.cjs && node scripts/check_planner_ui.cjs"
   },
   "devDependencies": {
     "jsdom": "31.0.1"

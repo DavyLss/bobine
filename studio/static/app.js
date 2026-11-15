@@ -18,7 +18,7 @@ function clearSelection(){selected=null;lastVideo=null;$('video').pause();$('vid
 async function api(path,options={}){const r=await fetch(path,{...options,headers:{'Content-Type':'application/json','X-Studio-Request':'1',...options.headers}});if(!r.ok){let data;try{data=await r.json()}catch{data={detail:'Le studio ne répond pas.'}};throw new Error(typeof data.detail==='string'?data.detail:'Vérifiez les champs du formulaire (50 vidéos maximum).')}return r.json();}
 function selectJob(job){if(!job)return;if(selected!==job.id){selected=job.id;lastVideo=null;$('video').pause();$('video').classList.add('hidden');$('preview-film').classList.remove('hidden');$('downloads').classList.add('hidden');}renderStatus(job);renderHistory();}
 function renderStatus(job){
- window.dispatchEvent(new CustomEvent('studio-job',{detail:job}));
+ window.dispatchEvent(new CustomEvent('studio-job',{detail:job}));$('logs').classList.toggle('hidden',job?.source==='import');
  const running=job&&job.status==='running',pending=job&&job.status==='queued',done=job&&job.status==='done',failed=job&&['failed','interrupted'].includes(job.status),cancelled=job&&job.status==='cancelled';
  $('status-heading').textContent=!job?'Prêt à créer':done?'Votre vidéo est prête':failed?'La génération s’est arrêtée':cancelled?'Génération annulée':pending?'Dans la file de création':'Votre idée prend vie';
  $('status-description').textContent=job?(job.warning||job.message):'Votre génération apparaîtra ici, étape par étape.';
@@ -31,6 +31,7 @@ function renderStatus(job){
  if(done){
   $('downloads').classList.remove('hidden');['download','script','subtitles'].forEach(id=>$(id).classList.remove('hidden'));$('preview-heading').textContent=job.title;
   const base=`/api/jobs/${job.id}/files/`;$('download').href=base+'Video.mp4?download=true';$('script').href=base+'Scenario.json';$('subtitles').href=base+'Sous-titres.srt?download=true';
+  if(job.source==='import'){['script','subtitles'].forEach(id=>$(id).classList.add('hidden'));}
   if(lastVideo!==job.id){$('video').src=base+'Video.mp4';$('video').poster=base+'Poster.jpg';lastVideo=job.id;}
   $('video').classList.remove('hidden');$('preview-film').classList.add('hidden');
  }
@@ -76,3 +77,5 @@ $('batch-select').addEventListener('change',()=>{selectedBatch=$('batch-select')
 for(const [id,action] of [['cancel-batch','cancel-pending'],['retry-batch','retry']])$(id).addEventListener('click',async()=>{const key=selectedBatch;$(id).disabled=true;$('batch-error').classList.add('hidden');try{const result=await api(`/api/batches/${key}/${action}`,{method:'POST'});if(action==='retry'){selectedBatch=result.id;$('follow-batch').checked=true;}await refresh();}catch(error){$('batch-error').textContent=error.message;$('batch-error').classList.remove('hidden');}finally{$(id).disabled=false;renderBatches();}});
 for(const name of ['single','batch','csv'])$(`mode-${name}`).addEventListener('click',()=>setMode(name));document.querySelector('.creation-modes').addEventListener('keydown',event=>{const modes=['single','batch','csv'];let index=modes.indexOf(mode);if(event.key==='ArrowRight')index=(index+1)%3;else if(event.key==='ArrowLeft')index=(index+2)%3;else if(event.key==='Home')index=0;else if(event.key==='End')index=2;else return;event.preventDefault();setMode(modes[index]);$(`mode-${mode}`).focus();});$('add-item').addEventListener('click',addEditor);addEditor();addEditor();setMode('single');
 (async()=>{await refresh();setForm(state.settings);$('last-dark').classList.toggle('hidden',state.settings.theme!=='dark');$('last-light').classList.toggle('hidden',state.settings.theme!=='light');const current=state.jobs.find(j=>j.status==='running')||state.jobs.find(j=>j.status==='queued');if(current){selected=current.id;renderStatus(current);}await health();setInterval(refresh,2500);setInterval(health,20000);})();
+
+window.addEventListener('studio-open-job',event=>{const job=state.jobs.find(j=>j.id===event.detail);if(job)selectJob(job);});

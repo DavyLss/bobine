@@ -93,7 +93,7 @@ def save_text(out,config,text):
     out=Path(out)
     for vertical in [True,False]:make_thumbnail(out,config,text,vertical)
     tags=' '.join(text['hashtags']);caption=text['title']+'\n\n'+text['description']+'\n\n'+tags
-    text.update(platforms={'youtube':{'title':text['title'],'description':text['description']+'\n\n'+tags+(' #Shorts' if config.get('format')=='reel' else '')},'instagram':{'caption':caption},'tiktok':{'caption':caption}},generator={'text':'Ollama local · '+OLLAMA_MODEL,'image':'Pillow local · charte du studio'})
+    text.update(platforms={'youtube':{'title':text['title'],'description':text['description']+'\n\n'+tags+(' #Shorts' if config.get('format')=='reel' else '')},'instagram':{'caption':caption},'tiktok':{'caption':caption}},generator={'text':'Saisie manuelle · import externe' if config.get('source')=='import' else 'Ollama local · '+OLLAMA_MODEL,'image':'Pillow local · charte du studio'})
     write_json(out/'Publication.json',text)
     (out/'Publication.txt').write_text(text['title']+'\n\n'+text['description']+'\n\n'+tags,encoding='utf-8')
     return text

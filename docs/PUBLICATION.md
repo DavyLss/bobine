@@ -93,3 +93,7 @@ Le serveur signe les envois ; aucun preset public non signé n'est nécessaire. 
 ## CSV
 
 En plus des colonnes de vidéo, les champs facultatifs sont `publication_auto` (`oui`/`non`), `reseaux` (`youtube|instagram|tiktok`) et `mode_publication` (`queue`/`now`, pour TikTok). Les noms anglais `auto_publish`, `publish_platforms` et `publish_mode` sont acceptés. Une cellule vide conserve le réglage commun. La publication automatique exige le format Reel et au moins un réseau correctement configuré.
+
+## Lots, imports et calendrier
+
+La diffusion de plusieurs vidéos et la planification locale se trouvent dans **Publications**. Voir [PLANIFICATION.md](PLANIFICATION.md) pour les imports externes, les horaires, les échéances manquées et la prévention des doublons.

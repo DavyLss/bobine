@@ -10,7 +10,7 @@ from fastapi.responses import HTMLResponse,RedirectResponse
 from pydantic import BaseModel,Field
 from typing import Literal
 import requests
-import integrations,publishing
+import integrations,publishing,planner
 from social_assets import PublicationText
 from batches import VideoSettings,VideoRequest,BatchRequest,VOICES,MAX_PENDING,validate_batch,batch_summary
 
@@ -85,7 +85,7 @@ def worker():
 
 @asynccontextmanager
 async def lifespan(app):
-    save();threading.Thread(target=worker,daemon=True).start();threading.Thread(target=social_worker,daemon=True).start();yield
+    save();threading.Thread(target=worker,daemon=True).start();threading.Thread(target=social_worker,daemon=True).start();threading.Thread(target=planner.worker,args=(sys.modules[__name__],),daemon=True).start();yield
 app=FastAPI(lifespan=lifespan)
 app.add_middleware(TrustedHostMiddleware,allowed_hosts=['127.0.0.1','localhost','testserver'])
 @app.middleware('http')
@@ -249,13 +249,14 @@ def file(key:str,name:str,download:bool=False):
     if not path.is_file():raise HTTPException(404,'Fichier pas encore disponible.')
     return FileResponse(path,filename=name if download else None,media_type='video/mp4' if name=='Video.mp4' else None)
 
-def queue_social(key,action,platforms=None,mode='queue',accounts=None):
+def queue_social(key,action,platforms=None,mode='queue',accounts=None,plan_id=None):
     with LOCK:
         job=find(key)
         if job['status']!='done':raise HTTPException(409,'Attendre la fin de la vidéo.')
         if key in SOCIAL_ACTIVE:raise HTTPException(409,'Une préparation ou un envoi est déjà en cours pour cette vidéo.')
+        if action in ['publish','prepare'] and any(p['job_id']==key and p['status'] in planner.ACTIVE and p['id']!=plan_id for p in state.get('publication_plans',[])):raise HTTPException(409,'Une planification est active pour cette vidéo. La modifier ou l’annuler dans le calendrier.')
         if action=='publish':
-            if job['format']!='reel':raise HTTPException(422,'Sélectionner une vidéo au format Reel pour ces publications.')
+            if job['format']!='reel' and any(p!='youtube' for p in (platforms or [])):raise HTTPException(422,'Sélectionner une vidéo verticale pour Instagram/TikTok, ou YouTube seul pour le format standard.')
             missing=integrations.missing(integrations.load(),platforms or [])
             if missing:raise HTTPException(422,' '.join(missing))
             if not (JOBS/key/'Publication.json').is_file():raise HTTPException(422,'Générer le kit local avant publication.')
@@ -339,7 +340,7 @@ def prepare_social(key:str):return queue_social(key,'prepare')
 def edit_social(key:str,body:PublicationText):
     with LOCK:
         job=find(key)
-        if job['status']!='done' or key in SOCIAL_ACTIVE:raise HTTPException(409,'Attendre la fin de la préparation ou de l’envoi.')
+        if job['status']!='done' or key in SOCIAL_ACTIVE or any(p['job_id']==key and p['status'] in planner.ACTIVE for p in state.get('publication_plans',[])):raise HTTPException(409,'Attendre la fin de l’envoi ou annuler la planification avant de modifier les textes.')
         from social_assets import save_text
         return save_text(JOBS/key,job,body.model_dump())
 
@@ -354,6 +355,7 @@ def refresh_social(key:str):return queue_social(key,'refresh')
 def social_guide():return FileResponse(ROOT/'docs/PUBLICATION.md',media_type='text/plain; charset=utf-8')
 @app.get('/')
 def index():return FileResponse(HERE/'static/index.html')
+planner.install(app,sys.modules[__name__])
 app.mount('/static',StaticFiles(directory=HERE/'static'),name='static')
 if __name__=='__main__':
     import uvicorn
