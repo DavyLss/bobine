@@ -1,0 +1,18 @@
+{
+  "models": [
+    {
+      "repo": "Qwen/Qwen3-TTS-12Hz-1.7B-Base",
+      "revision": "fd4b254389122332181a7c3db7f27e918eec64e3",
+      "directory": "Qwen3-TTS-1.7B-Base"
+    },
+    {
+      "repo": "Systran/faster-whisper-base",
+      "revision": "ebe41f70d5b6dfa9166e2c581c45c9c0cfc57b66",
+      "directory": "whisper-base"
+    }
+  ],
+  "ollama": {
+    "model": "qwen3:4b",
+    "observed_digest": "c7a0e9b8d27ed11b40c95ac2c21013728cef620c373087fdd0fdbc612aff0fbc"
+  }
+}

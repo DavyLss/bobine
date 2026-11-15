@@ -1,0 +1,19 @@
+{
+  "title": "Les trois voies du DevOps",
+  "voice": "Narrateur-Homme-01",
+  "source": "https://itrevolution.com/articles/the-three-ways-principles-underpinning-devops/",
+  "scenes": [
+    {"id":"blocage","text":"Votre équipe code vite, mais les livraisons bloquent et les mêmes incidents reviennent ?"},
+    {"id":"promesse","text":"Les trois voies du DevOps aident à améliorer tout le système. Suivons une petite modification."},
+    {"id":"flux","text":"Première voie : le flux. Faire avancer la valeur, de l'idée jusqu'à son utilisateur."},
+    {"id":"attente","text":"Réduisez les gros lots et les attentes. Accélérer le code ne suffit pas si les tests restent bouchés."},
+    {"id":"livraison","text":"Notre petite modification traverse les tests automatisés, puis arrive en production, chez l'utilisateur."},
+    {"id":"retour","text":"Deuxième voie : les retours rapides. L'information remonte vers ceux qui peuvent agir."},
+    {"id":"signal","text":"Un test échoue ? Une erreur apparaît en production ? L'équipe reçoit le signal tôt et corrige."},
+    {"id":"apprentissage","text":"Troisième voie : apprendre et expérimenter en continu. Les erreurs doivent pouvoir être discutées."},
+    {"id":"analyse","text":"Après un incident, l'équipe cherche ce qui a rendu l'erreur possible, plutôt qu'un coupable."},
+    {"id":"experience","text":"Elle teste une amélioration sur un petit périmètre, mesure le résultat et partage ce qu'elle apprend."},
+    {"id":"synthese","text":"Les trois voies se renforcent : livrer de la valeur, détecter les problèmes, puis améliorer le système."},
+    {"id":"action","text":"Pour votre prochain changement : où attend-il ? Qui reçoit les alertes ? Et qu'allez-vous apprendre ?"}
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "title": "C'est quoi le DevOps ?",
+  "voice": "Narrateur-Homme-01",
+  "sources": ["https://learn.microsoft.com/en-us/devops/what-is-devops", "https://www.atlassian.com/devops/what-is-devops/devops-culture"],
+  "scenes": [
+    {"id":"accroche","text":"Une application fonctionne chez les développeurs, mais tombe en panne chez les utilisateurs. Ça vous parle ?"},
+    {"id":"silos","text":"D'un côté, on crée les nouveautés. De l'autre, on doit garder le service disponible. Sans échange, ça coince."},
+    {"id":"definition","text":"Le DevOps, c'est une culture de collaboration entre le développement et l'exploitation, avec des pratiques et des outils."},
+    {"id":"objectif","text":"Le but : livrer des améliorations utiles plus rapidement, tout en gardant un service fiable. La responsabilité est partagée."},
+    {"id":"exemple","text":"Prenons un site de réservation. L'équipe veut ajouter un bouton pour annuler une réservation."},
+    {"id":"collaboration","text":"Développement, exploitation, qualité et sécurité préparent ensemble le changement. Ils anticipent les risques avant la mise en ligne."},
+    {"id":"automatisation","text":"Des tests automatisés vérifient le changement. Une procédure reproductible aide ensuite à le déployer, sans tout refaire à la main."},
+    {"id":"observation","text":"Une fois en ligne, l'équipe surveille les erreurs et écoute les utilisateurs. Livrer ne veut pas dire abandonner."},
+    {"id":"correction","text":"Si le bouton pose problème, elle réagit, corrige et apprend. Ces retours servent à améliorer la prochaine livraison."},
+    {"id":"outils","text":"Installer des outils ne suffit donc pas. Ce qui compte, c'est collaborer, automatiser ce qui aide et apprendre ensemble."},
+    {"id":"resume","text":"Retenez ceci : le DevOps rapproche les équipes pour améliorer en continu le logiciel et le service rendu."},
+    {"id":"conclusion","text":"Pour commencer, réunissez les personnes qui créent votre service et celles qui le font fonctionner. Quel obstacle pourriez-vous enlever ensemble ?"}
+  ]
+}

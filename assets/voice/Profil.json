@@ -1,0 +1,17 @@
+{
+  "name": "Narrateur-Homme-01",
+  "model": "Qwen3-TTS-12Hz-1.7B-Base",
+  "reference_sha256": "fd6d71e15faab5ac65d90ef5617a01317ccc6e0aed653b3a7f58f07f5f77b6fa",
+  "reference_text": "Au centre, le pourquoi. C'est la raison d'être de votre projet. Par exemple : aider chacun à apprendre plus facilement. C'est votre intention, pas votre produit.",
+  "seed": 1234,
+  "settings": {
+    "non_streaming_mode": true,
+    "max_new_tokens": 450,
+    "temperature": 0.45,
+    "top_p": 0.85,
+    "top_k": 40,
+    "repetition_penalty": 1.05,
+    "subtalker_temperature": 0.5,
+    "subtalker_top_p": 0.9
+  }
+}
