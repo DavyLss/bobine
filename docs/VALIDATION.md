@@ -10,7 +10,7 @@ Vérifications effectuées le 15 novembre 2026 sous Windows, Python 3.11 :
 - SHA-256 de la référence vocale synthétique conforme au profil.
 - Syntaxe PowerShell des scripts d'installation et de lancement contrôlée.
 
-Le clonage neuf depuis le dépôt GitHub a également passé les tests de rendu et d'API sous Windows. Les mêmes contrôles hors ligne ont réussi sur un runner Ubuntu GitHub Actions : [exécution de référence](https://github.com/DavyLss/local-video-studio/actions/runs/43706843639).
+Le clonage neuf depuis le dépôt GitHub a également passé les tests de rendu et d'API sous Windows. Les mêmes contrôles hors ligne ont réussi sur un runner Ubuntu GitHub Actions : [exécution de référence](https://github.com/DavyLss/bobine/actions/runs/43706843639).
 
 Limites : les poids et l'environnement Qwen existants ont déjà servi aux vidéos précédentes. Cette préparation du dépôt n'a pas refait une installation vocale complète dans un environnement neuf, téléchargé à nouveau tous les poids, ni généré une nouvelle vidéo intégrale. Le succès des tests hors ligne sous Ubuntu ne valide pas une installation vocale complète Linux/macOS.
 

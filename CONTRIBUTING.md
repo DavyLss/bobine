@@ -1,4 +1,4 @@
-# Contribuer à Local Video Studio
+# Contribuer à Bobine
 
 Les rapports de bugs, améliorations de documentation et contributions sont bienvenus. Le projet est maintenu sur le temps disponible, sans délai de réponse garanti.
 

@@ -1,8 +1,10 @@
-<p align="center"><img src="studio/static/brand/logo-transparent.png" width="180" height="180" alt="Logo Local Video Studio"></p>
+<p align="center"><img src="studio/static/brand/logo-transparent.png" width="180" height="180" alt="Logo Bobine"></p>
 
-# Local Video Studio
+# Bobine
 
-[![Licence MIT](https://img.shields.io/badge/licence-MIT-green)](LICENSE) [![Vérifications hors ligne](https://github.com/DavyLss/local-video-studio/actions/workflows/check.yml/badge.svg)](https://github.com/DavyLss/local-video-studio/actions/workflows/check.yml)
+**Vos idées prennent vie, image après image.**
+
+[![Licence MIT](https://img.shields.io/badge/licence-MIT-green)](LICENSE) [![Vérifications hors ligne](https://github.com/DavyLss/bobine/actions/workflows/check.yml/badge.svg)](https://github.com/DavyLss/bobine/actions/workflows/check.yml)
 
 Studio vidéo pédagogique en français, exécuté sur le poste : scénario IA, voix masculine de référence, sous-titres synchronisés et animations. Interface simple : titre, description, charte, durée moyenne, format, puis génération avec suivi et historique.
 
@@ -34,8 +36,8 @@ Captures de l’interface actualisées le 15 novembre 2026.
 Prérequis : [Python 3.11 64 bits](https://www.python.org/downloads/), [Git](https://git-scm.com/downloads) et [Ollama](https://ollama.com/download). Lancer Ollama avant l'installation. Prévoir plusieurs gigaoctets de téléchargements et de stockage ; 16 Go de RAM minimum conseillé, 32 Go préférable. La voix fonctionne sur CPU et peut prendre plusieurs minutes par vidéo. Un GPU NVIDIA compatible accélère le rendu ; le CPU est utilisé automatiquement si NVENC est indisponible.
 
 ```powershell
-git clone https://github.com/DavyLss/local-video-studio.git
-cd local-video-studio
+git clone https://github.com/DavyLss/bobine.git
+cd bobine
 .\Installer.ps1
 .\Lancer-Studio.ps1
 ```

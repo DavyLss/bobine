@@ -10,7 +10,7 @@ Le studio est une application personnelle exécutée sur `127.0.0.1`. Il ne four
 
 Lorsque le signalement privé GitHub est activé, utiliser **Security → Report a vulnerability** :
 
-https://github.com/DavyLss/local-video-studio/security/advisories/new
+https://github.com/DavyLss/bobine/security/advisories/new
 
 Si ce formulaire est indisponible, ouvrir uniquement une issue intitulée « Demande de canal de signalement privé », sans détail technique sensible. Le mainteneur devra convenir d’un canal confidentiel avant de recevoir les détails. Ne jamais envoyer de clé ni de jeton dans une issue publique.
 

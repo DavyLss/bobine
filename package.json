@@ -1,5 +1,5 @@
 {
-  "name": "local-video-studio-ui-checks",
+  "name": "bobine-ui-checks",
   "private": true,
   "description": "Tests DOM de l'interface uniquement ; aucun Node.js requis pour utiliser le studio.",
   "scripts": {
