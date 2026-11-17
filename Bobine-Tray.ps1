@@ -15,15 +15,17 @@ try { $ownsMutex = $mutex.WaitOne(0) } catch [Threading.AbandonedMutexException]
 $openEvent = [Threading.EventWaitHandle]::new($false, [Threading.EventResetMode]::AutoReset, ('Local\BobineOpen-' + $instance))
 if (!$ownsMutex) { $openEvent.Set() | Out-Null; $openEvent.Dispose(); $mutex.Dispose(); exit }
 function Open-Bobine {
+    param([Parameter(Mandatory)]$Context)
     try {
         $options = @{ SansZone = $true }
-        & (Join-Path $script:root 'Lancer-Studio.ps1') @options
+        & (Join-Path $Context.Root 'Lancer-Studio.ps1') @options
     } catch { [Windows.Forms.MessageBox]::Show($_.Exception.Message, 'Bobine', 'OK', 'Error') | Out-Null }
 }
 function Stop-Bobine {
+    param([Parameter(Mandatory)]$Context)
     try {
-        $listener = Get-NetTCPConnection -LocalPort $studioPort -State Listen -ErrorAction SilentlyContinue
-        $expected = [IO.Path]::GetFullPath((Join-Path $script:root 'studio/server.py')).Replace('\','/').ToLowerInvariant()
+        $listener = Get-NetTCPConnection -LocalPort $Context.Port -State Listen -ErrorAction SilentlyContinue
+        $expected = [IO.Path]::GetFullPath((Join-Path $Context.Root 'studio/server.py')).Replace('\','/').ToLowerInvariant()
         $serverProcesses = @()
         foreach ($processId in @($listener.OwningProcess | Select-Object -Unique)) {
             if (!$processId) { continue }
@@ -32,7 +34,7 @@ function Stop-Bobine {
             $serverProcesses += $processInfo
         }
         if ($serverProcesses.Count) {
-            $state = Invoke-RestMethod "$script:url/api/state" -TimeoutSec 5
+            $state = Invoke-RestMethod ($Context.Url + '/api/state') -TimeoutSec 5
             $active = @($state.jobs | Where-Object { $_.status -eq 'running' -or $_.publication.status -in @('queued','preparing','sending','uploading') })
             if ($active.Count) {
                 $answer = [Windows.Forms.MessageBox]::Show('Une génération ou un envoi est en cours. Quitter interrompra ces traitements. Une publication déjà acceptée par un réseau peut continuer. Quitter quand même ?', 'Quitter Bobine', 'YesNo', 'Warning', 'Button2')
@@ -44,7 +46,7 @@ function Stop-Bobine {
             if ($LASTEXITCODE -ne 0) { throw "Impossible d’arrêter le serveur. L’icône reste disponible." }
         }
         # Only Bobine's embedded host; never terminate a personal browser.
-        $desktopKey = [IO.Path]::GetFullPath((Join-Path $script:root 'studio/desktop.py')).Replace('\','/').ToLowerInvariant()
+        $desktopKey = [IO.Path]::GetFullPath((Join-Path $Context.Root 'studio/desktop.py')).Replace('\','/').ToLowerInvariant()
         $desktopProcesses = @(Get-CimInstance Win32_Process -Filter "Name='pythonw.exe'" | Where-Object { ([string]$_.CommandLine).Replace('\','/').ToLowerInvariant().Contains($desktopKey) })
         foreach ($processInfo in $desktopProcesses) {
             if ($desktopProcesses.ProcessId -contains $processInfo.ParentProcessId) { continue }
@@ -53,25 +55,32 @@ function Stop-Bobine {
         [Windows.Forms.Application]::ExitThread()
     } catch { [Windows.Forms.MessageBox]::Show($_.Exception.Message, 'Bobine', 'OK', 'Error') | Out-Null }
 }
+$context = @{ Root=$script:root; Port=$studioPort; Url=$script:url; Open=${function:Open-Bobine}; Stop=${function:Stop-Bobine}; OpenEvent=$openEvent }
+$openHandler = { param($sender,$eventArgs) & ($sender.Tag.Open) -Context $sender.Tag }
+$quitHandler = { param($sender,$eventArgs) & ($sender.Tag.Stop) -Context $sender.Tag }
 $tray = [Windows.Forms.NotifyIcon]::new()
 $icon = [Drawing.Icon]::new((Join-Path $script:root 'studio/static/brand/favicon.ico'))
 $tray.Icon = $icon
 $tray.Text = 'Bobine - actif en arrière-plan'
+$tray.Tag = $context
 $menu = [Windows.Forms.ContextMenuStrip]::new()
 $openItem = $menu.Items.Add('Ouvrir Bobine')
-$openItem.add_Click({ Open-Bobine })
+$openItem.Tag = $context
+$openItem.add_Click($openHandler)
 $menu.Items.Add([Windows.Forms.ToolStripSeparator]::new()) | Out-Null
 $quitItem = $menu.Items.Add('Quitter Bobine')
-$quitItem.add_Click({ Stop-Bobine })
+$quitItem.Tag = $context
+$quitItem.add_Click($quitHandler)
 $tray.ContextMenuStrip = $menu
-$tray.add_DoubleClick({ Open-Bobine })
+$tray.add_DoubleClick($openHandler)
 $timer = [Windows.Forms.Timer]::new()
 $timer.Interval = 500
-$timer.add_Tick({ if ($openEvent.WaitOne(0)) { Open-Bobine } })
+$reopenHandler = { if ($context.OpenEvent.WaitOne(0)) { & ($context.Open) -Context $context } }.GetNewClosure()
+$timer.add_Tick($reopenHandler)
 try {
     $tray.Visible = $true
     $timer.Start()
-    Open-Bobine
+    Open-Bobine -Context $context
     [Windows.Forms.Application]::Run()
 } finally {
     $timer.Stop(); $timer.Dispose()

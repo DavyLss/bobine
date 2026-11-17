@@ -24,6 +24,30 @@ try {
     & (Join-Path $repo 'Lancer-Studio.ps1') -Navigateur
     if ($global:BobineTestLaunches[0].File -notlike 'http://127.0.0.1:*') { throw 'Explicit browser fallback failed.' }
 
+    # Real notification callbacks must work without ambient script variables.
+    $trayAst = [Management.Automation.Language.Parser]::ParseFile((Join-Path $repo 'Bobine-Tray.ps1'),[ref]$null,[ref]$null)
+    $openFunction = $trayAst.Find({param($node) $node -is [Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -eq 'Open-Bobine'},$true)
+    . ([ScriptBlock]::Create($openFunction.Extent.Text))
+    $marker = Join-Path $repo 'opened.txt'
+    Set-Content -LiteralPath (Join-Path $repo 'Lancer-Studio.ps1') -Encoding UTF8 -Value 'param([switch]$SansZone) [IO.File]::AppendAllText((Join-Path $PSScriptRoot "opened.txt"), "opened`n")'
+    $script:root = $null
+    $script:url = $null
+    $context = @{Root=$repo;Port=8511;Url='http://127.0.0.1:8511';Open=${function:Open-Bobine};OpenEvent=[Threading.EventWaitHandle]::new($false,[Threading.EventResetMode]::AutoReset)}
+    foreach ($name in @('openHandler','reopenHandler')) {
+        $assignment = $trayAst.Find({param($node) $node -is [Management.Automation.Language.AssignmentStatementAst] -and $node.Left.Extent.Text -eq ('$' + $name)},$true)
+        . ([ScriptBlock]::Create($assignment.Extent.Text))
+    }
+    $menuItem = [Windows.Forms.ToolStripMenuItem]::new('Open')
+    try {
+        $menuItem.Tag = $context
+        $menuItem.add_Click($openHandler)
+        $menuItem.PerformClick()
+        $context.OpenEvent.Set() | Out-Null
+        & $reopenHandler
+        & $reopenHandler # Auto-reset: a repeated timer tick must not reopen twice.
+        if (@(Get-Content -LiteralPath $marker).Count -ne 2) { throw 'Notification click or shortcut reopen failed without script context.' }
+    } finally { $menuItem.Dispose(); $context.OpenEvent.Dispose() }
+
     # Exercise the real quit handler against fake process snapshots.
     $script:root = $repo
     $script:url = 'http://127.0.0.1:8511'
@@ -45,9 +69,9 @@ try {
     $ast = [Management.Automation.Language.Parser]::ParseFile((Join-Path $repo 'Bobine-Tray.ps1'),[ref]$null,[ref]$null)
     $handler = $ast.Find({param($node) $node -is [Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -eq 'Stop-Bobine'},$true)
     . ([ScriptBlock]::Create($handler.Extent.Text))
-    Stop-Bobine
+    Stop-Bobine -Context @{Root=$repo;Port=8511;Url='http://127.0.0.1:8511'}
     if (($global:BobineTestKilled -join ',') -ne '501,502') { throw 'Quit must stop only this server and dedicated profile.' }
-    Write-Host 'OK: embedded host, tray delegation, explicit browser fallback and scoped shutdown without duplicate child termination.'
+    Write-Host 'OK: embedded host, notification click and shortcut reopen without script context, browser fallback and scoped shutdown.'
 } finally {
     $resolved = [IO.Path]::GetFullPath($repo)
     if ((Split-Path $resolved -Parent).TrimEnd('\') -ne $tempRoot.TrimEnd('\') -or (Split-Path $resolved -Leaf) -notlike 'bobine-desktop-check-*') { throw 'Unsafe test cleanup path.' }
