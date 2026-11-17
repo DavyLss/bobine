@@ -29,8 +29,14 @@ with tempfile.TemporaryDirectory() as directory:
             assert client.get('/api/social/youtube/callback?state=invalid&code=fake').status_code==400
             assert client.get('/api/social/guide').status_code==200
             bad={'title':'Test','description':'Description suffisamment longue.','auto_publish':True,'publish_platforms':['youtube'],'format':'reel'}
-            assert client.post('/api/jobs',json=bad,headers=headers).status_code==422
-            assert client.get('/api/state').json()['jobs']==[]
+            with patch.object(server.PENDING,'put'):
+                for overrides in [{},{'publish_platforms':[]},{'format':'standard'}]:
+                    result=client.post('/api/jobs',json={**bad,**overrides},headers=headers)
+                    assert result.status_code==201,result.text
+                    job=result.json()
+                    assert job['status']=='queued' and not job['auto_publish']
+                    assert job['publication']['status']=='blocked' and not job.get('publish_accounts')
+                assert server.SOCIAL_PENDING.empty()
         # PKCE + state + code exchange, without any user account.
         authorization=api.youtube_authorize();query=parse_qs(urlparse(authorization['url']).query)
         assert query['code_challenge_method']==['S256'] and query['access_type']==['offline']
@@ -45,8 +51,8 @@ with tempfile.TemporaryDirectory() as directory:
         # CSV publication values inherit or override the common settings.
         items,_=validate_batch(BatchRequest(csv='titre;description;publication_auto;reseaux;mode_publication\nTitre;Une description assez longue;oui;youtube|instagram;now',defaults={'format':'reel'}))
         assert items[0]['auto_publish'] and items[0]['publish_platforms']==['youtube','instagram'] and items[0]['publish_mode']=='now'
-        try:validate_batch(BatchRequest(items=[{'title':'Test','description':'Une description assez longue','auto_publish':True}])) ;raise AssertionError('Auto sans réseau acceptée')
-        except ValueError:pass
+        items,_=validate_batch(BatchRequest(items=[{'title':'Test','description':'Une description assez longue','auto_publish':True}]))
+        assert items[0]['auto_publish'] and not items[0]['publish_platforms']
         # Generate real local JPGs and validate that the only text call targets Ollama.
         out=root/'asset-test';out.mkdir();Image.new('RGB',(1080,1920),'#29221e').save(out/'Poster.jpg')
         model_text={'title':'Le DevOps expliqué simplement','description':'Une équipe partage la responsabilité du service et apprend de chaque changement. Voici un exemple concret pour comprendre.','hashtags':['DevOps','Collaboration','Apprentissage'],'thumbnail_text':'Pourquoi travailler ensemble ?'}

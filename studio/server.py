@@ -120,18 +120,21 @@ def enqueue(items,settings,batch=None):
     """Persist the whole submission before exposing any item to the single worker."""
     with LOCK:
         config=integrations.load() if any(item.get('auto_publish') for item in items) else None
-        if config:
-            for item in items:
-                if item.get('auto_publish'):
-                    missing=integrations.missing(config,item['publish_platforms'])
-                    if missing:raise HTTPException(422,' '.join(missing))
         if sum(j['status'] in ['queued','running'] for j in state['jobs'])+len(items)>MAX_PENDING:raise HTTPException(409,f'La file accepte au maximum {MAX_PENDING} vidéos en cours ou en attente.')
         jobs=[];folders=[];previous=copy.deepcopy(state)
         try:
             for index,payload in enumerate(items):
                 key=uuid.uuid4().hex;folder=JOBS/key;folder.mkdir();folders.append(folder);atomic(folder/'Request.json',payload)
                 job={'id':key,**payload,'status':'queued','stage':'queued','progress':0,'message':'En attente de génération.','created':time.time(),'updated':time.time()}
-                if payload.get('auto_publish'):job['publish_accounts']=publishing.account_ids(config)
+                if payload.get('auto_publish'):
+                    reasons=[]
+                    if payload['format']!='reel':reasons.append('Le format Reel est requis pour la publication automatique.')
+                    if not payload['publish_platforms']:reasons.append('Aucun réseau sélectionné.')
+                    if payload['publish_platforms']:reasons.extend(integrations.missing(config,payload['publish_platforms']))
+                    if reasons:
+                        job['auto_publish']=False
+                        job['publication']={'status':'blocked','message':'Vidéo générée sans envoi automatique. '+' '.join(reasons),'targets':{}}
+                    else:job['publish_accounts']=publishing.account_ids(config)
                 if batch:job.update(batch_id=batch['id'],batch_index=index+1)
                 jobs.append(job)
             state['jobs'][0:0]=jobs

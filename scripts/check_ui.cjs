@@ -16,7 +16,6 @@ w.fetch=async(url,options={})=>{
  if(url==='/api/health')return response({ready:true,llm:true,voice:true,whisper:true});
  if(url==='/api/batches/preview'){
   if(delayPreview){delayPreview=false;await new Promise(resolve=>releasePreview=resolve);}
-  if(body.defaults.auto_publish&&!body.defaults.publish_platforms?.length)return response({detail:[{msg:'Value error, La publication automatique nécessite au moins un réseau.'}]},422);
   if(body.csv.includes('INVALID'))return response({detail:'Ligne 3 : vérifier duration.'},422);
   return response({total:2,lines:[2,3],items:['Premier CSV','Second CSV'].map(title=>({title,description:'Une explication concrète et simple.',...body.defaults}))});
  }
@@ -62,7 +61,7 @@ async function upload(text){const bytes=new TextEncoder().encode(text);Object.de
  assert.equal(requests.filter(r=>r.url==='/api/batches').length,batchesBeforeAuto,'Validation must never start production');
  w.studioSocial={generationSettings:()=>({auto_publish:true,publish_platforms:[]})};w.invalidateCSV();
  await new Promise(resolve=>w.setTimeout(resolve,350));await settle();
- assert.equal($('generate').disabled,true);assert.match($('submit-note').textContent,/au moins un réseau/,'Expose validation errors beside the final button');
+ assert.equal($('generate').disabled,false,'Optional publication without a network must not block CSV generation');
  w.studioSocial={generationSettings:()=>({auto_publish:true,publish_platforms:['tiktok']})};w.invalidateCSV();
  await new Promise(resolve=>w.setTimeout(resolve,350));await settle();assert.equal($('generate').disabled,false);
  await upload('titre;description\nAutomatique;Une description suffisamment détaillée');

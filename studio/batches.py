@@ -21,7 +21,6 @@ class VideoSettings(BaseModel):
     @model_validator(mode='after')
     def publication_options(self):
         if len(self.publish_platforms)!=len(set(self.publish_platforms)):raise ValueError('Réseau de publication en double.')
-        if self.auto_publish and (self.format!='reel' or not self.publish_platforms):raise ValueError('La publication automatique nécessite le format Reel et au moins un réseau.')
         return self
 
 class VideoRequest(VideoSettings):

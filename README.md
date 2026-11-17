@@ -192,3 +192,5 @@ Les fins et échecs de génération, confirmations et problèmes de publication,
 ![Barre persistante et centre d’activité de Bobine](docs/screenshots/activite.png)
 
 </details>
+
+La publication après génération est facultative : aucun compte ni réseau n’est nécessaire pour produire une vidéo. Si les options d’envoi sont incomplètes, la production continue sans publication automatique ; le motif reste visible dans le suivi de publication.
