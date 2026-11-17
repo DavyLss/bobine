@@ -5,8 +5,8 @@ from pydantic import BaseModel,ConfigDict,Field,ValidationError,field_validator,
 
 VOICE_ID='Narrateur-Homme-01'
 VOICES=[{'id':VOICE_ID,'name':'Narrateur homme · français','description':'Voix synthétique de référence de la série'}]
-MAX_BATCH=50
-MAX_PENDING=100
+MAX_BATCH=500
+MAX_PENDING=500
 
 class VideoSettings(BaseModel):
     model_config=ConfigDict(extra='forbid')

@@ -1,5 +1,6 @@
 """Real API + subprocess queue regression checks, without running AI models."""
 import os,sys,tempfile,json,time,subprocess
+from unittest.mock import patch
 from pathlib import Path
 from fastapi.testclient import TestClient
 ROOT=Path(__file__).resolve().parent.parent
@@ -52,7 +53,7 @@ sys.exit(1 if request['title'].startswith('FAIL') else 0)
         assert items[1]['duration']==60 and items[1]['theme']=='dark' and items[1]['voice']=='Narrateur-Homme-01'
         assert client.get('/api/state').json()['jobs']==[]
         assert not list(server.JOBS.iterdir())
-        for invalid in [csv.replace(';60;', ';999;'),csv.replace(';homme',';voix-inconnue'),'title,title,description\na,b,Longue description','titre;description\nCourt','titre;description\n"non fermé;texte','titre;description\n'+'Titre;Description assez longue\n'*51]:
+        for invalid in [csv.replace(';60;', ';999;'),csv.replace(';homme',';voix-inconnue'),'title,title,description\na,b,Longue description','titre;description\nCourt','titre;description\n"non fermé;texte','titre;description\n'+'Titre;Description assez longue\n'*501]:
             response=post(client,'/api/batches',{'csv':invalid,'defaults':defaults})
             assert response.status_code==422,(invalid,response.text)
             assert client.get('/api/state').json()['jobs']==[]
@@ -76,7 +77,7 @@ sys.exit(1 if request['title'].startswith('FAIL') else 0)
         finally:server.atomic=real_atomic
         assert not server.state['jobs'] and not server.state['batches'] and server.PENDING.empty()
         assert not list(server.JOBS.iterdir())
-        server.state['jobs']=[{'status':'queued'} for _ in range(99)]
+        server.state['jobs']=[{'status':'queued'} for _ in range(server.MAX_PENDING-1)]
         assert post(client,'/api/batches',body).status_code==409
         server.state['jobs']=[]
         assert not list(server.JOBS.iterdir())
@@ -152,6 +153,23 @@ sys.exit(1 if request['title'].startswith('FAIL') else 0)
         limit=time.monotonic()+10
         while time.monotonic()<limit and server.find(job.json()['id'])['status'] in ['queued','running']:time.sleep(.03)
         assert server.find(job.json()['id'])['status']=='done'
+        # Accept all 500 rows atomically without launching any generation.
+        large_csv='titre;description\n'+'Titre;Description assez longue\n'*500
+        assert post(client,'/api/batches/preview',{'csv':large_csv}).json()['total']==500
+        manual=[{'title':f'Titre {i}','description':'Description assez longue'} for i in range(500)]
+        assert post(client,'/api/batches/preview',{'items':manual}).json()['total']==500
+        assert post(client,'/api/batches/preview',{'items':manual+[manual[0]]}).status_code==422
+        with patch.object(server.PENDING,'put') as pending:
+            large=post(client,'/api/batches',{'csv':large_csv})
+            assert large.status_code==201,large.text
+            assert large.json()['total']==500 and pending.call_count==500
+            assert post(client,'/api/jobs',manual[0]).status_code==409
+            for key in large.json()['job_ids']:assert server.find(key)['status']=='queued'
+            # Keep the restart fixture focused on its original small batch.
+            ids=set(large.json()['job_ids'])
+            server.state['jobs'][:]=[job for job in server.state['jobs'] if job['id'] not in ids]
+            server.state['batches'][:]=[batch for batch in server.state['batches'] if batch['id']!=large.json()['id']]
+            server.save()
     server.subprocess.Popen=real_popen
     # A service restart preserves batches and exposes interrupted work for retry.
     restart=root/'restart';restart.mkdir()

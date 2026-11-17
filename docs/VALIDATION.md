@@ -27,7 +27,7 @@ L'export de contrôle utilise une sinusoïde, pas la narration IA ; il vérifie 
 ## Extension lots et CSV
 
 - Validation UTF-8/BOM, séparateurs, guillemets, descriptions sur plusieurs lignes, aliases français/anglais, valeurs communes et remplacements par ligne.
-- Refus intégral des lots invalides sans créer de tâches ni de dossiers de vidéos ; limite de 50 vidéos.
+- Refus intégral des lots invalides sans créer de tâches ni de dossiers de vidéos ; limite de 500 vidéos.
 - Tests API avec de vrais sous-processus de simulation : ordre FIFO entre lots, un seul calcul à la fois, poursuite après échec, relance des seuls échecs, annulation des attentes conservant le travail en cours, compatibilité vidéo seule et restauration des statuts interrompus après redémarrage.
 - Tests DOM avec jsdom : saisie et réordonnancement, réglages, import et aperçu CSV, invalidation de l'aperçu après changement des paramètres, gestion des erreurs, suivi de progression et sélection manuelle, annulation, protection contre l'injection HTML, navigation clavier des onglets.
 - Aucun test de lot ne lance les modèles IA. Les tests DOM ne remplacent pas un contrôle visuel dans un navigateur.

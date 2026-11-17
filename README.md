@@ -55,15 +55,15 @@ Ouvrir **http://127.0.0.1:8510/**. Si PowerShell bloque les scripts, ne pas modi
 
 ### Générer plusieurs vidéos en séquence
 
-Choisir **Plusieurs vidéos** pour saisir jusqu'à 50 titres/descriptions, ajouter ou retirer des lignes et changer leur ordre. La charte, la durée moyenne, le format et la voix sont communs à tout le lot.
+Choisir **Plusieurs vidéos** pour saisir jusqu'à 500 titres/descriptions, ajouter ou retirer des lignes et changer leur ordre. La charte, la durée moyenne, le format et la voix sont communs à tout le lot.
 
 Choisir **Importer un CSV** pour charger un fichier UTF-8. Le fichier est vérifié automatiquement, puis à chaque changement de réglage commun ; **Vérifier le fichier** permet aussi de relancer ce contrôle. L’aperçu affiche les valeurs réellement utilisées et tout blocage est rappelé près du bouton final. Télécharger le modèle dans l'interface ou partir de [cet exemple](examples/lot-devops.csv).
 
 Colonnes : `titre, description, charte, duree, format, voix` (les noms anglais `title, description, theme, duration, format, voice` sont aussi acceptés). Seuls titre et description sont obligatoires. Une cellule de réglage vide reprend la valeur commune ; une cellule remplie remplace cette valeur pour la ligne. Séparateurs acceptés : virgule, point-virgule et tabulation. Encadrer de guillemets les descriptions contenant le séparateur ou des retours à la ligne.
 
-Valeurs : charte `dark`/`light` (ou `sombre`/`clair`), durée entière de 15 à 180 secondes, format `reel`/`standard` (ou `9:16`/`16:9`), voix `Narrateur-Homme-01`. Une seule voix est actuellement installée. Les fichiers sont limités à 1 Mo et 50 vidéos ; toute erreur bloque le lot avant sa mise en file, sans génération partielle.
+Valeurs : charte `dark`/`light` (ou `sombre`/`clair`), durée entière de 15 à 180 secondes, format `reel`/`standard` (ou `9:16`/`16:9`), voix `Narrateur-Homme-01`. Une seule voix est actuellement installée. Les fichiers sont limités à 1 Mo et 500 vidéos ; toute erreur bloque le lot avant sa mise en file, sans génération partielle.
 
-Le panneau **Suivi des lots** affiche les vidéos dans l'ordre, l'étape courante, la progression globale, les succès, échecs et annulations, puis les liens de téléchargement. Le suivi automatique peut être désactivé pour consulter une autre vidéo. Tous les lots partagent la même file FIFO et **une seule vidéo est calculée à la fois** (100 vidéos actives/en attente au maximum).
+Le panneau **Suivi des lots** affiche les vidéos dans l'ordre, l'étape courante, la progression globale, les succès, échecs et annulations, puis les liens de téléchargement. Le suivi automatique peut être désactivé pour consulter une autre vidéo. Tous les lots partagent la même file FIFO et **une seule vidéo est calculée à la fois** (500 vidéos actives/en attente au maximum).
 
 Un échec laisse les vidéos suivantes continuer. **Annuler les vidéos en attente** laisse celle en cours se terminer. **Relancer les échecs** crée un nouveau lot pour les seules vidéos échouées ou interrompues. Fermer la page ne coupe pas la génération tant que le serveur fonctionne. La barre de production permet de **mettre en pause après la vidéo en cours**, puis de reprendre plus tard. La pause et les vidéos en attente sont conservées après un redémarrage du studio. Seule une vidéo dont le rendu était en cours au moment de l’arrêt est marquée interrompue et doit être relancée ; aucun rendu ne reprend au milieu de son calcul.
 
