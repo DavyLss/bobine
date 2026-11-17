@@ -166,3 +166,17 @@ Pour créer le raccourci sur une installation existante :
 `Lancer-Studio.ps1` utilise aussi cette fenêtre par défaut. L’option `-Navigateur` conserve l’ouverture dans le navigateur habituel. Le profil de la fenêtre est séparé dans `.local/app-profile/`, ignoré par Git. Fermer la fenêtre ne coupe pas le serveur : les générations et publications planifiées peuvent continuer tant que le PC reste allumé.
 
 Si le dossier du projet est déplacé, relancer `Creer-Raccourci.ps1` pour actualiser le raccourci.
+
+### Arrière-plan et choix du navigateur
+
+Bobine reste dans la **zone de notification Windows** après fermeture de sa fenêtre (éventuellement sous la flèche des icônes masquées). Un double-clic ou **Ouvrir Bobine** réouvre l’application. **Quitter Bobine** arrête son serveur et sa fenêtre dédiée ; une confirmation est demandée si une génération ou un transfert est actif. Les publications déjà acceptées à distance peuvent continuer. Les futures échéances ne seront pas exécutées tant que Bobine reste arrêté. Un seul gestionnaire de notification est lancé par dossier et port.
+
+Le navigateur par défaut de Windows n’est utilisé qu’avec `-Navigateur`. En mode application, Bobine recherche Edge, Chrome puis Brave ; le premier trouvé est choisi. Ce navigateur n’est pas inclus dans le dépôt et garde son mécanisme habituel de mise à jour.
+
+Pour imposer un navigateur Chromium installé ou portable, renseigner **`STUDIO_BROWSER_PATH`** dans `.local/config.json` (chemin absolu vers son `.exe`), ou la variable d’environnement du même nom. Pour un lancement ponctuel :
+
+```powershell
+.\Lancer-Studio.ps1 -BrowserPath 'C:\Program Files\Google\Chrome\Application\chrome.exe'
+```
+
+Fermer complètement Bobine avant de changer ce choix. Un chemin configuré invalide produit une erreur explicite, sans basculer silencieusement sur un autre navigateur. Le navigateur portable doit être installé séparément depuis son éditeur et maintenu à jour. Le mode `-Navigateur` n’active pas la zone de notification.

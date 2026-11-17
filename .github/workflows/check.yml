@@ -3,6 +3,13 @@ on: [push, pull_request, workflow_dispatch]
 permissions:
   contents: read
 jobs:
+  desktop:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check dedicated window and scoped shutdown
+        shell: powershell
+        run: ./scripts/check_desktop.ps1
   check:
     runs-on: ubuntu-latest
     steps:
