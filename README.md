@@ -152,3 +152,17 @@ Les logiciels, poids et polices gardent leurs licences propres : [notices](THIRD
 ## Contribuer et signaler un problème
 
 Consulter [CONTRIBUTING.md](CONTRIBUTING.md) pour l’environnement de développement et les tests, [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) pour les échanges et [SECURITY.md](SECURITY.md) pour les signalements confidentiels. Le projet est fourni sans garantie ni support contractuel.
+
+## Fenêtre dédiée et raccourci Windows
+
+L’installation crée un raccourci **Bobine** sur le Bureau de l’utilisateur, avec le logo de l’application. Le raccourci démarre le serveur local puis ouvre une fenêtre dédiée, sans onglets ni barre d’adresse, grâce au mode application d’Edge, Chrome ou Brave déjà installé. Aucun compte ni service distant n’est nécessaire pour cette fenêtre.
+
+Pour créer le raccourci sur une installation existante :
+
+```powershell
+.\Creer-Raccourci.ps1
+```
+
+`Lancer-Studio.ps1` utilise aussi cette fenêtre par défaut. L’option `-Navigateur` conserve l’ouverture dans le navigateur habituel. Le profil de la fenêtre est séparé dans `.local/app-profile/`, ignoré par Git. Fermer la fenêtre ne coupe pas le serveur : les générations et publications planifiées peuvent continuer tant que le PC reste allumé.
+
+Si le dossier du projet est déplacé, relancer `Creer-Raccourci.ps1` pour actualiser le raccourci.
