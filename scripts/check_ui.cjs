@@ -16,6 +16,7 @@ w.fetch=async(url,options={})=>{
  if(url==='/api/health')return response({ready:true,llm:true,voice:true,whisper:true});
  if(url==='/api/batches/preview'){
   if(delayPreview){delayPreview=false;await new Promise(resolve=>releasePreview=resolve);}
+  if(body.defaults.auto_publish&&!body.defaults.publish_platforms?.length)return response({detail:[{msg:'Value error, La publication automatique nécessite au moins un réseau.'}]},422);
   if(body.csv.includes('INVALID'))return response({detail:'Ligne 3 : vérifier duration.'},422);
   return response({total:2,lines:[2,3],items:['Premier CSV','Second CSV'].map(title=>({title,description:'Une explication concrète et simple.',...body.defaults}))});
  }
@@ -53,6 +54,19 @@ async function upload(text){const bytes=new TextEncoder().encode(text);Object.de
  $('validate-csv').click();await settle();assert.equal($('generate').disabled,false);event($('form'),'submit');await settle();const csvRequest=requests.filter(r=>r.url==='/api/batches').at(-1);assert.ok(csvRequest.body.csv);assert.equal(csvRequest.body.defaults.duration,60);
  await upload('INVALID');$('validate-csv').click();await settle();assert.match($('csv-message').textContent,/Ligne 3/);assert.equal($('generate').disabled,true);
  await upload('titre;description\nAutre;Une autre description longue');delayPreview=true;$('validate-csv').click();await settle();$('duration').value=75;event($('duration'),'input');releasePreview();await settle();assert.equal($('generate').disabled,true);
+ // Changing common settings must automatically validate again, even on the final step.
+ const batchesBeforeAuto=requests.filter(r=>r.url==='/api/batches').length;
+ await new Promise(resolve=>w.setTimeout(resolve,350));await settle();
+ assert.equal($('generate').disabled,false,'Changed defaults must not leave CSV permanently disabled');
+ assert.equal(requests.filter(r=>r.url==='/api/batches/preview').at(-1).body.defaults.duration,75);
+ assert.equal(requests.filter(r=>r.url==='/api/batches').length,batchesBeforeAuto,'Validation must never start production');
+ w.studioSocial={generationSettings:()=>({auto_publish:true,publish_platforms:[]})};w.invalidateCSV();
+ await new Promise(resolve=>w.setTimeout(resolve,350));await settle();
+ assert.equal($('generate').disabled,true);assert.match($('submit-note').textContent,/au moins un réseau/,'Expose validation errors beside the final button');
+ w.studioSocial={generationSettings:()=>({auto_publish:true,publish_platforms:['tiktok']})};w.invalidateCSV();
+ await new Promise(resolve=>w.setTimeout(resolve,350));await settle();assert.equal($('generate').disabled,false);
+ await upload('titre;description\nAutomatique;Une description suffisamment détaillée');
+ await new Promise(resolve=>w.setTimeout(resolve,350));await settle();assert.equal($('generate').disabled,false,'Imported CSV validates automatically');
  $('mode-batch').click();$('mode-batch').focus();$('mode-batch').dispatchEvent(new w.KeyboardEvent('keydown',{key:'ArrowRight',bubbles:true}));assert.equal($('mode-csv').getAttribute('aria-selected'),'true');assert.equal($('mode-batch').tabIndex,-1);
  console.log('OK : saisie, ordre, réglages communs, CSV, erreurs, suivi, annulation, protection DOM et navigation clavier.');dom.window.close();
 })().catch(error=>{console.error(error);dom.window.close();process.exitCode=1;});

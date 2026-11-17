@@ -57,7 +57,7 @@ Ouvrir **http://127.0.0.1:8510/**. Si PowerShell bloque les scripts, ne pas modi
 
 Choisir **Plusieurs vidéos** pour saisir jusqu'à 50 titres/descriptions, ajouter ou retirer des lignes et changer leur ordre. La charte, la durée moyenne, le format et la voix sont communs à tout le lot.
 
-Choisir **Importer un CSV** pour charger un fichier UTF-8, puis **Vérifier le fichier**. L'aperçu affiche les valeurs qui seront réellement utilisées. Télécharger le modèle dans l'interface ou partir de [cet exemple](examples/lot-devops.csv).
+Choisir **Importer un CSV** pour charger un fichier UTF-8. Le fichier est vérifié automatiquement, puis à chaque changement de réglage commun ; **Vérifier le fichier** permet aussi de relancer ce contrôle. L’aperçu affiche les valeurs réellement utilisées et tout blocage est rappelé près du bouton final. Télécharger le modèle dans l'interface ou partir de [cet exemple](examples/lot-devops.csv).
 
 Colonnes : `titre, description, charte, duree, format, voix` (les noms anglais `title, description, theme, duration, format, voice` sont aussi acceptés). Seuls titre et description sont obligatoires. Une cellule de réglage vide reprend la valeur commune ; une cellule remplie remplace cette valeur pour la ligne. Séparateurs acceptés : virgule, point-virgule et tabulation. Encadrer de guillemets les descriptions contenant le séparateur ou des retours à la ligne.
 
