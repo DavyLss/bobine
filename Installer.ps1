@@ -13,6 +13,7 @@ foreach ($environment in @('.venv', '.venv-voice')) {
     if (!(Test-Path "$environment/Scripts/python.exe")) {
         Run-Checked $Python ($prefix + @('-m', 'venv', $environment))
     }
+    Run-Checked "$environment/Scripts/python.exe" @('scripts/fix_venv_paths.py')
 }
 Run-Checked '.venv/Scripts/python.exe' @('-m','pip','install','-r','requirements.txt','-c','requirements-lock.txt')
 Run-Checked '.venv-voice/Scripts/python.exe' @('-m','pip','install','torch==2.6.0','torchaudio==2.6.0','--index-url','https://download.pytorch.org/whl/cpu')

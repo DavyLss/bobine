@@ -44,3 +44,15 @@ Bobine reste dans la **zone de notification Windows** après fermeture de sa fen
 L’option `Lancer-Studio.ps1 -Navigateur` reste disponible pour ouvrir volontairement l’interface dans le navigateur habituel, sans gestionnaire de notification. Les liens externes (documentation, autorisation Google) peuvent aussi ouvrir ce navigateur ; l’interface Bobine reste dans WebView2. Les imports et téléchargements sont autorisés dans la fenêtre intégrée.
 
 Les anciens réglages `STUDIO_BROWSER_PATH` et `-BrowserPath` ne sont plus utilisés. Si le dossier du projet est déplacé, relancer `Creer-Raccourci.ps1` pour actualiser le raccourci. Fermer la fenêtre laisse les traitements actifs ; utiliser **Quitter Bobine** pour les arrêter complètement.
+
+### Python introuvable depuis le raccourci
+
+Un environnement créé depuis une application Windows empaquetée peut contenir un chemin Python virtualisé, accessible depuis cette application mais pas depuis le Bureau. L’installateur normalise désormais les chemins de chaque environnement avec `scripts/fix_venv_paths.py`, sans réinstaller les paquets ni modifier les modèles.
+
+Pour corriger une installation existante, depuis le contexte où son Python fonctionne :
+
+```powershell
+.venv/Scripts/python.exe scripts/fix_venv_paths.py
+```
+
+Les erreurs de réouverture sont consignées dans `.local/tray-error.log`. Les erreurs de démarrage du serveur et de la fenêtre se trouvent dans `.local/server-error.log` et `.local/desktop-error.log`.

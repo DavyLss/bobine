@@ -19,7 +19,12 @@ function Open-Bobine {
     try {
         $options = @{ SansZone = $true }
         & (Join-Path $Context.Root 'Lancer-Studio.ps1') @options
-    } catch { [Windows.Forms.MessageBox]::Show($_.Exception.Message, 'Bobine', 'OK', 'Error') | Out-Null }
+    } catch {
+        $logDirectory = Join-Path $Context.Root '.local'
+        New-Item -ItemType Directory -Path $logDirectory -Force | Out-Null
+        Add-Content -LiteralPath (Join-Path $logDirectory 'tray-error.log') -Encoding UTF8 -Value ((Get-Date -Format o) + ' ' + $_.Exception.Message + "`n" + $_.ScriptStackTrace)
+        [Windows.Forms.MessageBox]::Show($_.Exception.Message, 'Bobine', 'OK', 'Error') | Out-Null
+    }
 }
 function Stop-Bobine {
     param([Parameter(Mandatory)]$Context)
