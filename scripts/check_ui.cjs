@@ -66,6 +66,7 @@ async function upload(text){const bytes=new TextEncoder().encode(text);Object.de
  await new Promise(resolve=>w.setTimeout(resolve,350));await settle();assert.equal($('generate').disabled,false);
  await upload('titre;description\nAutomatique;Une description suffisamment détaillée');
  await new Promise(resolve=>w.setTimeout(resolve,350));await settle();assert.equal($('generate').disabled,false,'Imported CSV validates automatically');
+ await upload('INVALID');await new Promise(resolve=>w.setTimeout(resolve,350));await settle();assert.equal($('generate').disabled,true);assert.match($('generate').title,/Ligne 3/);assert.equal($('generate').getAttribute('aria-busy'),'false');assert.equal($('submit-note').classList.contains('generation-blocked'),true);
  $('mode-batch').click();$('mode-batch').focus();$('mode-batch').dispatchEvent(new w.KeyboardEvent('keydown',{key:'ArrowRight',bubbles:true}));assert.equal($('mode-csv').getAttribute('aria-selected'),'true');assert.equal($('mode-batch').tabIndex,-1);
  console.log('OK : saisie, ordre, réglages communs, CSV, erreurs, suivi, annulation, protection DOM et navigation clavier.');dom.window.close();
 })().catch(error=>{console.error(error);dom.window.close();process.exitCode=1;});
