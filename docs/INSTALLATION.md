@@ -25,30 +25,22 @@ Le code de rendu prévoit les polices Segoe sous Windows et DejaVu sous Linux. A
 
 Pour une migration : cloner le dépôt, installer, puis restaurer séparément les dossiers de modèles et de travail. L'historique existant de l'ancien poste n'est pas importé automatiquement. Les chemins relatifs du dépôt ne contiennent aucun chemin personnel du poste d'origine.
 
-## Fenêtre dédiée et raccourci Windows
+## Application Windows dédiée
 
-L’installation crée un raccourci **Bobine** sur le Bureau de l’utilisateur, avec le logo de l’application. Le raccourci démarre le serveur local puis ouvre une fenêtre dédiée, sans onglets ni barre d’adresse, grâce au mode application d’Edge, Chrome ou Brave déjà installé. Aucun compte ni service distant n’est nécessaire pour cette fenêtre.
+L’installation crée un raccourci **Bobine** sur le Bureau. Bobine utilise une fenêtre native avec **Microsoft WebView2**, via pywebview : aucun navigateur Edge, Chrome ou Brave n’est requis pour afficher l’application. Le moteur WebView2 est imposé, sans repli silencieux vers un autre moteur. Les données de navigation sont isolées dans `.local/webview2-profile/`, ignoré par Git, et ne reprennent pas les extensions ni le profil du navigateur personnel.
 
-Pour créer le raccourci sur une installation existante :
+Le [runtime WebView2 Evergreen](https://developer.microsoft.com/microsoft-edge/webview2/) doit être installé. Il est vérifié par l’installateur ; s’il manque, un message indique le lien officiel pour l’installer. Evergreen reçoit ses mises à jour de Microsoft : le moteur est commun, mais le numéro de version peut varier selon le déploiement des mises à jour Windows. Le runtime conserve ses conditions Microsoft, distinctes de la licence MIT de Bobine.
+
+Pour mettre à niveau une installation existante, sans réinstaller les modèles :
 
 ```powershell
+.\Installer-Fenetre.ps1
 .\Creer-Raccourci.ps1
+.\Lancer-Studio.ps1
 ```
 
-`Lancer-Studio.ps1` utilise aussi cette fenêtre par défaut. L’option `-Navigateur` conserve l’ouverture dans le navigateur habituel. Le profil de la fenêtre est séparé dans `.local/app-profile/`, ignoré par Git. Fermer la fenêtre ne coupe pas le serveur : les générations et publications planifiées peuvent continuer tant que le PC reste allumé.
+Bobine reste dans la **zone de notification Windows** après fermeture de sa fenêtre (éventuellement sous la flèche des icônes masquées). Un double-clic ou **Ouvrir Bobine** réaffiche l’application. **Quitter Bobine** arrête son serveur et sa fenêtre dédiée ; une confirmation est demandée si une génération ou un transfert est actif. Les publications déjà acceptées à distance peuvent continuer. Les futures échéances ne seront pas exécutées tant que Bobine reste arrêté. Un seul gestionnaire de notification est lancé par dossier et port.
 
-Si le dossier du projet est déplacé, relancer `Creer-Raccourci.ps1` pour actualiser le raccourci.
+L’option `Lancer-Studio.ps1 -Navigateur` reste disponible pour ouvrir volontairement l’interface dans le navigateur habituel, sans gestionnaire de notification. Les liens externes (documentation, autorisation Google) peuvent aussi ouvrir ce navigateur ; l’interface Bobine reste dans WebView2. Les imports et téléchargements sont autorisés dans la fenêtre intégrée.
 
-### Arrière-plan et choix du navigateur
-
-Bobine reste dans la **zone de notification Windows** après fermeture de sa fenêtre (éventuellement sous la flèche des icônes masquées). Un double-clic ou **Ouvrir Bobine** réouvre l’application. **Quitter Bobine** arrête son serveur et sa fenêtre dédiée ; une confirmation est demandée si une génération ou un transfert est actif. Les publications déjà acceptées à distance peuvent continuer. Les futures échéances ne seront pas exécutées tant que Bobine reste arrêté. Un seul gestionnaire de notification est lancé par dossier et port.
-
-Le navigateur par défaut de Windows n’est utilisé qu’avec `-Navigateur`. En mode application, Bobine recherche Edge, Chrome puis Brave ; le premier trouvé est choisi. Ce navigateur n’est pas inclus dans le dépôt et garde son mécanisme habituel de mise à jour.
-
-Pour imposer un navigateur Chromium installé ou portable, renseigner **`STUDIO_BROWSER_PATH`** dans `.local/config.json` (chemin absolu vers son `.exe`), ou la variable d’environnement du même nom. Pour un lancement ponctuel :
-
-```powershell
-.\Lancer-Studio.ps1 -BrowserPath 'C:\Program Files\Google\Chrome\Application\chrome.exe'
-```
-
-Fermer complètement Bobine avant de changer ce choix. Un chemin configuré invalide produit une erreur explicite, sans basculer silencieusement sur un autre navigateur. Le navigateur portable doit être installé séparément depuis son éditeur et maintenu à jour. Le mode `-Navigateur` n’active pas la zone de notification.
+Les anciens réglages `STUDIO_BROWSER_PATH` et `-BrowserPath` ne sont plus utilisés. Si le dossier du projet est déplacé, relancer `Creer-Raccourci.ps1` pour actualiser le raccourci. Fermer la fenêtre laisse les traitements actifs ; utiliser **Quitter Bobine** pour les arrêter complètement.

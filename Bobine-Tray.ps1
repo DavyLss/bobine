@@ -1,5 +1,4 @@
-﻿param([string]$BrowserPath)
-$ErrorActionPreference = 'Stop'
+﻿$ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 [System.Windows.Forms.Application]::EnableVisualStyles()
@@ -15,11 +14,9 @@ $ownsMutex = $false
 try { $ownsMutex = $mutex.WaitOne(0) } catch [Threading.AbandonedMutexException] { $ownsMutex = $true }
 $openEvent = [Threading.EventWaitHandle]::new($false, [Threading.EventResetMode]::AutoReset, ('Local\BobineOpen-' + $instance))
 if (!$ownsMutex) { $openEvent.Set() | Out-Null; $openEvent.Dispose(); $mutex.Dispose(); exit }
-$script:browserChoice = $BrowserPath
 function Open-Bobine {
     try {
         $options = @{ SansZone = $true }
-        if ($script:browserChoice) { $options.BrowserPath = $script:browserChoice }
         & (Join-Path $script:root 'Lancer-Studio.ps1') @options
     } catch { [Windows.Forms.MessageBox]::Show($_.Exception.Message, 'Bobine', 'OK', 'Error') | Out-Null }
 }
@@ -46,13 +43,12 @@ function Stop-Bobine {
             & (Join-Path $env:SystemRoot 'System32/taskkill.exe') /PID $processInfo.ProcessId /T /F | Out-Null
             if ($LASTEXITCODE -ne 0) { throw "Impossible d’arrêter le serveur. L’icône reste disponible." }
         }
-        # Only Bobine's dedicated profile; never terminate the user's personal browser.
-        $profile = [IO.Path]::GetFullPath((Join-Path $script:root '.local/app-profile')).Replace('\','/').ToLowerInvariant()
-        foreach ($processInfo in @(Get-CimInstance Win32_Process -Filter "Name='msedge.exe' OR Name='chrome.exe' OR Name='brave.exe'")) {
-            $command = ([string]$processInfo.CommandLine).Replace('\','/').ToLowerInvariant()
-            if ($command.Contains('--user-data-dir="' + $profile + '"') -and !$command.Contains('--type=')) {
-                & (Join-Path $env:SystemRoot 'System32/taskkill.exe') /PID $processInfo.ProcessId /T /F | Out-Null
-            }
+        # Only Bobine's embedded host; never terminate a personal browser.
+        $desktopKey = [IO.Path]::GetFullPath((Join-Path $script:root 'studio/desktop.py')).Replace('\','/').ToLowerInvariant()
+        $desktopProcesses = @(Get-CimInstance Win32_Process -Filter "Name='pythonw.exe'" | Where-Object { ([string]$_.CommandLine).Replace('\','/').ToLowerInvariant().Contains($desktopKey) })
+        foreach ($processInfo in $desktopProcesses) {
+            if ($desktopProcesses.ProcessId -contains $processInfo.ParentProcessId) { continue }
+            & (Join-Path $env:SystemRoot 'System32/taskkill.exe') /PID $processInfo.ProcessId /T /F | Out-Null
         }
         [Windows.Forms.Application]::ExitThread()
     } catch { [Windows.Forms.MessageBox]::Show($_.Exception.Message, 'Bobine', 'OK', 'Error') | Out-Null }

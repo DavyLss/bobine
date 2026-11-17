@@ -1,4 +1,4 @@
-param([string]$Python = 'py', [switch]$SkipModels)
+﻿param([string]$Python = 'py', [switch]$SkipModels)
 $ErrorActionPreference = 'Stop'
 Set-Location $PSScriptRoot
 function Run-Checked {
@@ -22,5 +22,6 @@ if (!$SkipModels) {
     Run-Checked '.venv/Scripts/python.exe' @('scripts/download_models.py')
     Run-Checked 'ollama' @('pull','qwen3:4b')
 }
+& (Join-Path $PSScriptRoot 'Installer-Fenetre.ps1')
 & (Join-Path $PSScriptRoot 'Creer-Raccourci.ps1')
 Write-Host 'Installation terminée. Lancer : .\Lancer-Studio.ps1'

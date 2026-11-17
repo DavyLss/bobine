@@ -57,3 +57,7 @@ YouTube, Instagram, Buffer et Cloudinary sont des services externes, non fournis
 ## Expérimentations antérieures
 
 MoneyPrinterTurbo, ComfyUI et Wan2.2 sont cités dans la documentation de la stack optionnelle. Le studio actuel n’en dépend pas et leurs sources et modèles ne sont pas redistribués ici. Leur ajout ultérieur exige une vérification distincte de leurs licences.
+
+## Fenêtre Windows intégrée
+
+La fenêtre utilise [pywebview 6.2.1](https://github.com/r0x0r/pywebview) (BSD-3-Clause), avec les dépendances épinglées dans `requirements-desktop.txt`. Les licences livrées avec pythonnet, clr_loader, proxy_tools et Bottle restent applicables. Le [runtime Microsoft WebView2 Evergreen](https://developer.microsoft.com/microsoft-edge/webview2/) est installé séparément et conserve ses conditions Microsoft ; il n’est pas redistribué dans ce dépôt.
