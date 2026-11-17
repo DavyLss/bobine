@@ -15,7 +15,7 @@ native = SimpleNamespace(shell32=SimpleNamespace(SetCurrentProcessExplicitAppUse
 with tempfile.TemporaryDirectory() as folder, patch.object(desktop, 'ROOT', Path(folder)), \
         patch.object(desktop.ctypes, 'windll', native, create=True), patch.dict(sys.modules, webview=view):
     desktop.main()
-    assert calls['window'][0] == ('Bobine', f'http://127.0.0.1:{desktop.PORT}/')
+    assert calls['window'][0] == ('Bobine', f'http://127.0.0.1:{desktop.PORT}/?ui=0')
     assert 'js_api' not in calls['window'][1]
     assert calls['start']['gui'] == 'edgechromium'
     assert calls['start']['debug'] is False

@@ -354,7 +354,7 @@ def refresh_social(key:str):return queue_social(key,'refresh')
 @app.get('/api/social/guide')
 def social_guide():return FileResponse(ROOT/'docs/PUBLICATION.md',media_type='text/plain; charset=utf-8')
 @app.get('/')
-def index():return FileResponse(HERE/'static/index.html')
+def index():return FileResponse(HERE/'static/index.html',headers={'Cache-Control':'no-store'})
 planner.install(app,sys.modules[__name__])
 app.mount('/static',StaticFiles(directory=HERE/'static'),name='static')
 if __name__=='__main__':

@@ -22,7 +22,9 @@ def main():
     ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID('DavyLss.Bobine')
     webview.settings['ALLOW_DOWNLOADS'] = True
     webview.settings['ALLOW_FILE_URLS'] = False
-    webview.create_window('Bobine', f'http://127.0.0.1:{PORT}/', width=1280,
+    entry = ROOT / 'studio/static/index.html'
+    revision = entry.stat().st_mtime_ns if entry.exists() else 0
+    webview.create_window('Bobine', f'http://127.0.0.1:{PORT}/?ui={revision}', width=1280,
                           height=900, min_size=(800, 600), background_color='#101113',
                           text_select=True)
     # Never fall back to an old engine or to the user's browser.

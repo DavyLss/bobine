@@ -179,3 +179,16 @@ Les anciens réglages `STUDIO_BROWSER_PATH` et `-BrowserPath` ne sont plus utili
 ![Fenêtre Bobine indépendante avec le moteur WebView2](docs/screenshots/fenetre-bobine.png)
 
 </details>
+
+## Suivi global et notifications
+
+La barre **Activité**, en bas de chaque page, conserve le suivi pendant la navigation : vidéo en cours, étape et pourcentage, attente de production, diffusions et planifications. Un clic ouvre le détail et les 30 dernières notifications de la session. Cliquer sur une tâche retrouve la vidéo ou son calendrier.
+
+Les fins et échecs de génération, confirmations et problèmes de publication, ainsi que les échéances dépassées sont signalés dans l’application. Un envoi accepté ou placé dans une file distante reste distinct d’une publication confirmée par le réseau. Les notifications ne déclenchent aucun nouvel envoi. Ces notifications concernent l’interface ouverte, pas les notifications système Windows.
+
+<details>
+<summary>Voir le suivi global dans Bobine</summary>
+
+![Barre persistante et centre d’activité de Bobine](docs/screenshots/activite.png)
+
+</details>
