@@ -4,7 +4,7 @@ from typing import Literal
 from pydantic import BaseModel,ConfigDict,Field,ValidationError,field_validator,model_validator
 
 VOICE_ID='Narrateur-Homme-01'
-VOICES=[{'id':VOICE_ID,'name':'Narrateur homme · français','description':'Voix synthétique de référence de la série'}]
+VOICES=[{'id':VOICE_ID,'name':'Narrateur homme · français','description':'Voix synthétique masculine de référence'},{'id':'Narratrice-Femme-01','name':'Narratrice femme · français','description':'Voix synthétique féminine de référence'}]
 MAX_BATCH=500
 MAX_PENDING=500
 
@@ -13,7 +13,7 @@ class VideoSettings(BaseModel):
     theme:Literal['dark','light']='dark'
     duration:int=Field(default=90,ge=15,le=180)
     format:Literal['reel','standard']='reel'
-    voice:Literal['Narrateur-Homme-01']=VOICE_ID
+    voice:Literal['Narrateur-Homme-01','Narratrice-Femme-01']=VOICE_ID
     auto_publish:bool=False
     publish_platforms:list[Literal['youtube','instagram','tiktok']]=Field(default_factory=list,max_length=3)
     publish_mode:Literal['queue','now']='queue'
@@ -52,7 +52,7 @@ HEADERS={'title':'title','titre':'title','description':'description','theme':'th
 ALIASES={
     'theme':{'dark':'dark','sombre':'dark','atelier sombre':'dark','light':'light','clair':'light','editorial clair':'light'},
     'format':{'reel':'reel','reels':'reel','9:16':'reel','standard':'standard','16:9':'standard'},
-    'voice':{normalize(VOICE_ID):VOICE_ID,'homme':VOICE_ID,'narrateur homme':VOICE_ID},
+    'voice':{normalize(VOICE_ID):VOICE_ID,'homme':VOICE_ID,'narrateur homme':VOICE_ID,'narratrice-femme-01':'Narratrice-Femme-01','femme':'Narratrice-Femme-01','narratrice femme':'Narratrice-Femme-01'},
 }
 
 def csv_rows(content):
@@ -94,7 +94,7 @@ def validate_batch(body):
         try:items.append(VideoRequest.model_validate(values).model_dump())
         except ValidationError as error:
             fields=', '.join(dict.fromkeys(str(e['loc'][0]) if e['loc'] else 'publication_auto / réseaux / format' for e in error.errors()))
-            errors.append(f'Ligne {line} : vérifier {fields}. Durée entière de 15 à 180 s ; charte dark/light ; format reel/standard ; voix {VOICE_ID}. Titre de 3 à 120 caractères, description de 10 à 6 000 caractères.')
+            errors.append(f'Ligne {line} : vérifier {fields}. Durée entière de 15 à 180 s ; charte dark/light ; format reel/standard ; voix Narrateur-Homme-01/Narratrice-Femme-01. Titre de 3 à 120 caractères, description de 10 à 6 000 caractères.')
     if errors:raise ValueError('\n'.join(errors))
     return items,[line for line,_ in rows]
 

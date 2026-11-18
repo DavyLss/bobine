@@ -6,7 +6,7 @@
 
 [![Licence MIT](https://img.shields.io/badge/licence-MIT-green)](LICENSE) [![Vérifications hors ligne](https://github.com/DavyLss/bobine/actions/workflows/check.yml/badge.svg)](https://github.com/DavyLss/bobine/actions/workflows/check.yml)
 
-Studio vidéo pédagogique en français, exécuté sur le poste : scénario IA, voix masculine de référence, sous-titres synchronisés et animations. Interface simple : titre, description, charte, durée moyenne, format, puis génération avec suivi et historique.
+Studio vidéo pédagogique en français, exécuté sur le poste : scénario IA, voix masculine ou féminine de référence, sous-titres synchronisés et animations. Interface simple : titre, description, charte, durée moyenne, format, puis génération avec suivi et historique.
 
 Deux directions conservées : **Atelier sombre** et **Éditorial clair**, avec apparitions, rebonds, objets et typographie. La dernière charte utilisée est mémorisée. Formats **Reel 1080 × 1920** et **Standard 1920 × 1080**, 30 images/s, MP4 H.264/AAC.
 
@@ -61,7 +61,7 @@ Choisir **Importer un CSV** pour charger un fichier UTF-8. Le fichier est vérif
 
 Colonnes : `titre, description, charte, duree, format, voix` (les noms anglais `title, description, theme, duration, format, voice` sont aussi acceptés). Seuls titre et description sont obligatoires. Une cellule de réglage vide reprend la valeur commune ; une cellule remplie remplace cette valeur pour la ligne. Séparateurs acceptés : virgule, point-virgule et tabulation. Encadrer de guillemets les descriptions contenant le séparateur ou des retours à la ligne.
 
-Valeurs : charte `dark`/`light` (ou `sombre`/`clair`), durée entière de 15 à 180 secondes, format `reel`/`standard` (ou `9:16`/`16:9`), voix `Narrateur-Homme-01`. Une seule voix est actuellement installée. Les fichiers sont limités à 1 Mo et 500 vidéos ; toute erreur bloque le lot avant sa mise en file, sans génération partielle.
+Valeurs : charte `dark`/`light` (ou `sombre`/`clair`), durée entière de 15 à 180 secondes, format `reel`/`standard` (ou `9:16`/`16:9`), voix `Narrateur-Homme-01` ou `Narratrice-Femme-01` (alias CSV `homme` / `femme`). Les deux profils synthétiques sont locaux et réutilisables. Les fichiers sont limités à 1 Mo et 500 vidéos ; toute erreur bloque le lot avant sa mise en file, sans génération partielle.
 
 Le panneau **Suivi des lots** affiche les vidéos dans l'ordre, l'étape courante, la progression globale, les succès, échecs et annulations, puis les liens de téléchargement. Le suivi automatique peut être désactivé pour consulter une autre vidéo. Tous les lots partagent la même file FIFO et **une seule vidéo est calculée à la fois** (500 vidéos actives/en attente au maximum).
 

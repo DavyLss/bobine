@@ -1,7 +1,7 @@
 const $=id=>document.getElementById(id),form=$('form');let state={jobs:[],settings:{},batches:[]},selected=null,lastVideo=null,ready=false,busy=false,historySignature='';
 let mode='single',selectedBatch=null,csvText=null,csvValid=false,csvLoading=false,batchRowsFor=null,editorSequence=0;
 const stages=['scenario','voice','alignment','render','verify','metadata'];
-const names={queued:'En attente',running:'En cours',scenario:'Scénario',voice:'Voix masculine',alignment:'Sous-titres',render:'Animation & rendu',verify:'Contrôle de l’export',done:'Terminée',failed:'Échec',cancelled:'Annulée',interrupted:'Interrompue'};
+const names={queued:'En attente',running:'En cours',scenario:'Scénario',voice:'Narration',alignment:'Sous-titres',render:'Animation & rendu',verify:'Contrôle de l’export',done:'Terminée',failed:'Échec',cancelled:'Annulée',interrupted:'Interrompue'};
 const duration=s=>s>=60?`${Math.floor(s/60)} min${Math.round(s%60)?' '+Math.round(s%60):''}`:`${Math.round(s)} s`;
 const themeName=t=>t==='dark'?'Atelier sombre':'Éditorial clair';
 function element(tag,className,text){const e=document.createElement(tag);if(className)e.className=className;if(text!==undefined)e.textContent=text;return e;}

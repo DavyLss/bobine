@@ -2,7 +2,7 @@ from pathlib import Path
 import sys,json,re,difflib,unicodedata,subprocess,traceback,hashlib
 import requests,numpy as np,soundfile as sf
 from faster_whisper import WhisperModel
-from config import ROOT,MODELS,VOICE,VOICE_PYTHON,OLLAMA_URL,OLLAMA_MODEL
+from config import ROOT,MODELS,VOICE,VOICE_PYTHON,OLLAMA_URL,OLLAMA_MODEL,voice_files
 HERE=Path(__file__).resolve().parent
 def emit(stage,message,progress,**extra):print('@studio '+json.dumps(dict(stage=stage,message=message,progress=progress,**extra),ensure_ascii=False),flush=True)
 def norm(s):return re.sub('[^a-z0-9]','', ''.join(c for c in unicodedata.normalize('NFD',s.lower()) if not unicodedata.combining(c)))
@@ -37,7 +37,7 @@ Ne pas choisir la même illustration pour plus de deux plans. Le dernier plan ut
     for scene in scenes:
         scene['text']=re.sub(r'\bsans risque\b','en limitant les risques',scene['text'],flags=re.IGNORECASE)
         scene['text']=re.sub(r'\béviter toutes les erreurs\b','réduire les erreurs',scene['text'],flags=re.IGNORECASE)
-    data.update(title=config['title'],target_duration=config['duration'],voice='Narrateur-Homme-01',reference_sha256=hashlib.sha256((VOICE/'Reference-Homme.wav').read_bytes()).hexdigest())
+    data.update(title=config['title'],target_duration=config['duration'],voice=config.get('voice','Narrateur-Homme-01'),reference_sha256=hashlib.sha256(voice_files(config.get('voice','Narrateur-Homme-01'))[1].read_bytes()).hexdigest())
     (out/'Scenario.json').write_text(json.dumps(data,ensure_ascii=False,indent=2),encoding='utf-8');return data
 def voice(out,indices=None):
     exe=VOICE_PYTHON

@@ -9,6 +9,7 @@ $('composer-next').click();assert(!panels[0].hidden,'Invalid subject must stay v
 $('title').value='Le DevOps';$('description').value='Expliquer les trois voies avec un exemple concret.';
 $('composer-next').click();assert(!panels[1].hidden);assert.equal($('voice').closest('.composer-panel'),panels[1]);
 $('composer-next').click();assert(!panels[2].hidden);assert(!d.querySelector('.composer-launch').hidden);assert($('launch-summary').textContent.includes('Le DevOps'));
+$('voice').value='Narratrice-Femme-01';$('voice').dispatchEvent(new w.Event('change',{bubbles:true}));assert.match($('launch-summary').textContent,/Narratrice femme/);
 $('composer-back').click();assert(!panels[1].hidden);
 w.location.hash='#history';w.dispatchEvent(new w.HashChangeEvent('hashchange'));assert.equal(links[2].getAttribute('aria-current'),'page');assert.equal(d.body.dataset.view,'history');
 w.location.hash='#batch-monitor';w.dispatchEvent(new w.HashChangeEvent('hashchange'));assert(!$('queue-empty').hidden);

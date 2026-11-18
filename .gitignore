@@ -13,6 +13,7 @@ outputs/
 *.ogg
 *.wav
 !assets/voice/Reference-Homme.wav
+!assets/voice/Reference-Femme.wav
 *.safetensors
 *.pt
 *.bin

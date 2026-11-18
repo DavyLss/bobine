@@ -108,7 +108,7 @@ def health():
     try:
         result=requests.get(OLLAMA_URL+'/api/tags',timeout=2);result.raise_for_status();llm=any(m['name']==OLLAMA_MODEL for m in result.json()['models'])
     except requests.RequestException:llm=False
-    voice=(VOICE/'Reference-Homme.wav').exists() and (MODELS/'Qwen3-TTS-1.7B-Base/model.safetensors').exists()
+    voice=all((VOICE/file).exists() for file in ['Reference-Homme.wav','Profil.json','Reference-Femme.wav','Profil-Femme.json']) and (MODELS/'Qwen3-TTS-1.7B-Base/model.safetensors').exists()
     voice=voice and VOICE_PYTHON.is_file()
     whisper=(MODELS/'whisper-base/model.bin').is_file()
     return {'llm':llm,'voice':voice,'whisper':whisper,'ready':llm and voice and whisper}

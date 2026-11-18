@@ -51,6 +51,9 @@ sys.exit(1 if request['title'].startswith('FAIL') else 0)
         assert preview.status_code==200,preview.text
         items=preview.json()['items'];assert items[0]['duration']==45 and items[0]['theme']=='light' and items[0]['format']=='standard'
         assert items[1]['duration']==60 and items[1]['theme']=='dark' and items[1]['voice']=='Narrateur-Homme-01'
+        female=post(client,'/api/batches/preview',{'defaults':{'voice':'Narratrice-Femme-01'},'csv':'titre;description;voix\nVoix commune;Une description assez longue;\nVoix masculine;Une description assez longue;homme\nVoix féminine;Une description assez longue;femme'})
+        assert female.status_code==200,female.text
+        assert [item['voice'] for item in female.json()['items']]==['Narratrice-Femme-01','Narrateur-Homme-01','Narratrice-Femme-01']
         assert client.get('/api/state').json()['jobs']==[]
         assert not list(server.JOBS.iterdir())
         for invalid in [csv.replace(';60;', ';999;'),csv.replace(';homme',';voix-inconnue'),'title,title,description\na,b,Longue description','titre;description\nCourt','titre;description\n"non fermé;texte','titre;description\n'+'Titre;Description assez longue\n'*501]:

@@ -13,3 +13,11 @@ VOICE=ROOT/'assets/voice'
 VOICE_PYTHON=Path(setting('STUDIO_VOICE_PYTHON',str(ROOT/('.venv-voice/Scripts/python.exe' if os.name=='nt' else '.venv-voice/bin/python'))))
 OLLAMA_URL=setting('STUDIO_OLLAMA_URL','http://127.0.0.1:11434').rstrip('/')
 OLLAMA_MODEL=setting('STUDIO_OLLAMA_MODEL','qwen3:4b')
+
+VOICE_PROFILES={
+    'Narrateur-Homme-01':('Profil.json','Reference-Homme.wav'),
+    'Narratrice-Femme-01':('Profil-Femme.json','Reference-Femme.wav'),
+}
+def voice_files(voice_id='Narrateur-Homme-01'):
+    profile,reference=VOICE_PROFILES[voice_id]
+    return VOICE/profile,VOICE/reference

@@ -1,0 +1,18 @@
+{
+  "name": "Narrateur-Homme-01",
+  "model": "Qwen3-TTS-12Hz-1.7B-Base",
+  "reference_sha256": "1cfac6b5af36120516e6709996faadb6ef25abfa6146f6ea3e5df1f076e46bf2",
+  "reference_text": "Une idée devient plus claire quand on prend le temps de l'expliquer. Ensemble, découvrons un exemple concret, étape par étape. Vous verrez, quelques mots simples peuvent tout changer.",
+  "seed": 1842,
+  "settings": {
+    "non_streaming_mode": true,
+    "max_new_tokens": 450,
+    "temperature": 0.45,
+    "top_p": 0.85,
+    "top_k": 40,
+    "repetition_penalty": 1.05,
+    "subtalker_temperature": 0.5,
+    "subtalker_top_p": 0.9
+  },
+  "design_instruction": "A native French female narrator in her thirties, warm clear natural mid-range voice, metropolitan French accent, conversational educational delivery, gently expressive with natural pauses and varied intonation. Confident and friendly, calm moderate pace. Clean dry studio recording, no reverb, no music, no sound effects, no whispering, no exaggerated breathiness."
+}

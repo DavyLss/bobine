@@ -12,6 +12,13 @@ assert CONFIG_ROOT==ROOT
 assert MODELS.is_absolute()
 profile=json.loads((VOICE/'Profil.json').read_text(encoding='utf-8'))
 assert hashlib.sha256((VOICE/'Reference-Homme.wav').read_bytes()).hexdigest()==profile['reference_sha256']
+from config import voice_files
+for voice_id in ['Narrateur-Homme-01','Narratrice-Femme-01']:
+    profile_path,reference_path=voice_files(voice_id)
+    voice_profile=json.loads(profile_path.read_text(encoding='utf-8'))
+    assert hashlib.sha256(reference_path.read_bytes()).hexdigest()==voice_profile['reference_sha256']
+    audio,rate=sf.read(reference_path)
+    assert rate==24000 and len(audio)>rate*3 and np.isfinite(audio).all() and np.max(np.abs(audio))>.01
 with tempfile.TemporaryDirectory() as directory:
     out=Path(directory)
     scenes=[{'title':'Une intention claire','text':'Comprendre le changement et vérifier son effet.','visual':kind,'labels':['Préparer','Vérifier','Apprendre']} for kind in ['flow','cycle','compare','steps','target','people','chart','question']]
