@@ -29,6 +29,7 @@ jobs:
             if ($parseErrors) { throw ($parseErrors | Out-String) }
           }
       - run: python scripts/check.py
+      - run: python scripts/check_editorial.py
       - run: python scripts/check_api.py
       - run: python scripts/check_batches.py
       - run: python scripts/check_social.py

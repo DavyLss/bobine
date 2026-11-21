@@ -194,3 +194,5 @@ Les fins et échecs de génération, confirmations et problèmes de publication,
 </details>
 
 La publication après génération est facultative : aucun compte ni réseau n’est nécessaire pour produire une vidéo. Si les options d’envoi sont incomplètes, la production continue sans publication automatique ; le motif reste visible dans le suivi de publication.
+
+Le scénario passe par une relecture éditoriale locale avant la voix : accroche concrète, exemple suivi, progression des idées, nuances et conclusion utile. Les amorces répétées, les passages presque identiques et la répétition excessive du mot « équipe » déclenchent une réécriture ciblée. Trois essais maximum : un scénario encore répétitif est arrêté avant la synthèse vocale. Ces contrôles ne remplacent pas une vérification humaine du fond. Les vidéos déjà exportées restent inchangées.

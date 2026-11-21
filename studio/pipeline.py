@@ -8,6 +8,19 @@ def emit(stage,message,progress,**extra):print('@studio '+json.dumps(dict(stage=
 def norm(s):return re.sub('[^a-z0-9]','', ''.join(c for c in unicodedata.normalize('NFD',s.lower()) if not unicodedata.combining(c)))
 def stamp(s):
     ms=round(s*1000);return f'{ms//3600000:02}:{ms//60000%60:02}:{ms//1000%60:02},{ms%1000:03}'
+def editorial_issues(scenes):
+    """Spot conspicuous repetition, keeping necessary technical vocabulary."""
+    tokens=[re.findall(r"[a-zà-ÿ]+",str(scene.get('text','')).lower()) for scene in scenes]
+    starts=[' '.join(words[:3]) for words in tokens if len(words)>=3]
+    issues=[]
+    if any(starts.count(start)>2 for start in starts):issues.append('Varier les débuts de phrases : une même amorce revient plus de deux fois.')
+    team=sum(words.count('équipe')+words.count('équipes') for words in tokens)
+    if team>max(3,len(scenes)//3):issues.append(f'Le mot équipe revient {team} fois. Alléger les sujets répétitifs sans empiler des synonymes.')
+    for i,words in enumerate(tokens):
+        if any(len(words)>=10 and len(previous)>=10 and difflib.SequenceMatcher(None,previous,words,autojunk=False).ratio()>.78 for previous in tokens[:i]):
+            issues.append('Deux plans reformulent presque la même phrase : faire avancer le propos.');break
+    return issues
+
 def scenario(config,out):
     count=max(3,min(16,round(config['duration']/8)));budget=round((config['duration']-count*.65)*2.2)
     schema={'type':'object','properties':{'scenes':{'type':'array','minItems':count,'maxItems':count,'items':{'type':'object','properties':{'title':{'type':'string'},'text':{'type':'string'},'visual':{'type':'string','enum':['flow','cycle','compare','steps','target','people','chart','question']},'labels':{'type':'array','items':{'type':'string'},'minItems':2,'maxItems':3}},'required':['title','text','visual','labels']}}},'required':['scenes']}
@@ -16,16 +29,40 @@ def scenario(config,out):
     prompt=f'''Crée une vidéo pédagogique en français accessible. Sujet : {config['title']}.
 Description fournie par l'utilisateur : {config['description']}
 Durée cible {config['duration']} secondes, environ {budget} mots de narration AU TOTAL, {count} plans.
-Ouvre par une accroche concrète, explique simplement avec un exemple, termine par une action utile. Chaque texte est prêt à être lu, sans titres, markdown ni didascalies. Ne pas inventer de chiffres ou de références. Ne pas ajouter de publicité. Respecte les relations de cause et conséquence : un test ou une observation détecte un problème mais ne le corrige pas automatiquement. Une résolution doit montrer une action corrective. Ne promets pas de supprimer tous les risques.
+Ouvre par une accroche concrète, explique simplement avec un exemple, termine par une action utile. Chaque texte est prêt à être lu, sans titres, markdown ni didascalies. Ne pas inventer de chiffres ou de références. Ne pas ajouter de publicité. Respecte les relations de cause et conséquence. Une résolution doit montrer une action corrective. Ne promets pas de supprimer tous les risques.
 Chaque plan a un title court (maximum 35 caractères), text de 8 à 28 mots (répartir le budget), un visual pertinent, et 2 ou 3 labels courts (maximum 18 caractères chacun) à afficher dans l'illustration. Les labels ne sont pas des phrases de narration.
 flow=élément qui traverse des étapes, cycle=retour d'information, compare=deux situations, steps=étapes successives, target=objectif atteint, people=collaboration, chart=comparaison illustrative non chiffrée, question=question/action finale.
 Ne pas choisir la même illustration pour plus de deux plans. Le dernier plan utilise question. Ne fournis que le JSON conforme au schéma : {json.dumps(schema)}'''
-    for attempt in range(2):
-        response=requests.post(OLLAMA_URL+'/api/chat',json={'model':OLLAMA_MODEL,'messages':[{'role':'user','content':prompt}],'stream':False,'think':False,'format':schema,'keep_alive':0,'options':{'temperature':.35,'num_predict':4500,'num_ctx':8192}},timeout=(5,300))
+    prompt+='''
+RÈGLES ÉDITORIALES PRIORITAIRES : écris comme un créateur qui maîtrise son sujet et le raconte à une personne curieuse. Travaille le fond avant les formulations : une idée centrale précise, une confusion à lever, un mécanisme expliqué et une nuance utile.
+Ouvre directement par une tension, une question précise ou une conséquence concrète. Évite les amorces automatiques « L'équipe », « Aujourd'hui nous allons » et « Imaginez un monde ». Pas de slogans ni de faux suspense.
+Suis UN exemple cohérent : mêmes personnages, faits et chronologie. Accroche, problème, explication, action, conséquence, nuance puis conclusion utile. Chaque plan apporte une information nouvelle ou fait avancer l'action. Ne recommence pas le problème après sa résolution et ne redis pas les bénéfices avec des mots différents.
+Contrainte de style : le mot « équipe » ne doit apparaître que DEUX FOIS maximum dans toute la narration. Aucun passage ne commence par « L'équipe ». Fais des actions et des objets concrets les sujets des phrases, au lieu de renommer le collectif. Varie les constructions et les débuts de phrases. Évite de nommer « l'équipe » à chaque plan ; privilégie les actions, un personnage identifié et des pronoms clairs. Conserve les termes techniques utiles, explique-les, sans synonymes artificiels.
+Ton oral et naturel, phrases de longueurs variées, transitions liées au raisonnement, adresse ponctuelle au spectateur. Termine par une action spécifique issue de l'exemple, sans récapitulation supplémentaire ni « c'est maintenant ».
+Vérifie les causes et conséquences, les limites et les confusions possibles. N'invente pas de chiffres ni de résultats garantis. Les consignes de rédaction ne doivent pas être récitées dans la narration.
+La longueur de chaque passage doit surtout répartir le budget total de mots : 5 à 45 mots autorisés, et pas de remplissage pour atteindre la durée.'''
+    editor={'role':'system','content':"Tu es un auteur de vulgarisation. Raconte un seul exemple cohérent, avec une vraie progression : problème, mécanisme, action, résultat et nuance. Chaque plan apporte un élément nouveau. Écris pour être entendu, pas comme une fiche de cours. Varie les débuts. Limite le mot équipe à deux occurrences et ne commence pas les phrases par L’équipe : privilégie les actions, un personnage nommé et les pronoms clairs, sans remplacer équipe par un synonyme à chaque phrase. N’invente ni chiffres ni promesses de rapidité. Pas de répétition des bénéfices, pas de conclusion générique. Respecte le JSON demandé."}
+    if 'blameless' in (config['title']+' '+config['description']).lower():
+        # Curated grounding, available offline: https://sre.google/sre-book/postmortem-culture/
+        prompt+='\nFond à respecter pour ce sujet : après un incident, reconstituer les faits et les informations disponibles au moment des décisions, chercher les facteurs contributifs dans le système, puis attribuer et suivre des actions préventives concrètes. Absence de blâme ne veut pas dire absence de responsabilité. Ne pas réduire ce concept à partager les logs ou corriger plus vite. Aucun délai de résolution garanti.'
+    messages=[editor,{'role':'user','content':prompt}];reviews=[]
+    for attempt in range(3):
+        response=requests.post(OLLAMA_URL+'/api/chat',json={'model':OLLAMA_MODEL,'messages':messages,'stream':False,'think':False,'format':schema,'keep_alive':0,'options':{'temperature':.5,'num_predict':5000,'num_ctx':8192}},timeout=(5,300))
         response.raise_for_status();data=json.loads(response.json()['message']['content']);scenes=data.get('scenes',[])
         words=sum(len(s.get('text','').split()) for s in scenes)
-        if .7*budget<=words<=1.35*budget:break
-        prompt+=f'\nATTENTION : la version précédente comptait {words} mots, le budget est {budget}. Réécris en visant {max(8,round(budget/count))} mots par plan. Respecte vraiment la longueur pour cette durée.'
+        issues=editorial_issues(scenes)
+        unsupported=set(re.findall(r'\d+(?:[.,]\d+)?',' '.join(scene.get('text','') for scene in scenes)))-set(re.findall(r'\d+(?:[.,]\d+)?',config['title']+' '+config['description']))
+        if unsupported:issues.append('Retirer les chiffres absents du brief : '+', '.join(sorted(unsupported))+'. Ne promettre aucun délai de résolution.')
+        if not .7*budget<=words<=1.35*budget:issues.append(f'{words} mots actuellement : viser {budget} mots sans redites.')
+        if len(scenes)!=count:issues.append(f'Produire exactement {count} plans.')
+        if any(not 5<=len(s.get('text','').split())<=45 for s in scenes):issues.append('Respecter 5 à 45 mots par passage.')
+        reviews.append({'attempt':attempt+1,'words':words,'issues':issues,'scenes':scenes})
+        (out/'Relecture.json').write_text(json.dumps(reviews,ensure_ascii=False,indent=2),encoding='utf-8')
+        # Always review the draft; allow one final targeted repair.
+        if attempt>=1 and not issues:break
+        if attempt==2:raise ValueError('Le scénario reste répétitif ou mal calibré après réécriture. '+' '.join(issues))
+        emit('scenario','Relecture éditoriale : progression, rythme et répétitions…',12)
+        messages=[editor,{'role':'user','content':prompt},{'role':'assistant','content':json.dumps(data,ensure_ascii=False)},{'role':'user','content':'Réécris ce brouillon en rédacteur en chef. Supprime les idées redondantes, corrige les contradictions et approfondis le mécanisme avec un seul exemple cohérent. Ne remplace pas simplement les mots par des synonymes. Conserve le format JSON et le budget de mots. Points à corriger : '+(' '.join(issues)+' IMPORTANT : réécris de zéro les phrases concernées. Si le mot équipe est signalé, ne l’utilise PLUS DU TOUT dans cette version : raconte les actions avec un personnage nommé et des pronoms clairs, sans multiplier les synonymes du collectif.' if issues else 'Affiner la progression pédagogique, la précision et le naturel oral.')}]
     if len(scenes)!=count:raise ValueError('Le modèle de texte n’a pas produit le nombre de plans demandé. Relancez la génération.')
     for scene in scenes:
         scene['title']=str(scene['title']).strip()[:70];scene['text']=str(scene['text']).strip()
