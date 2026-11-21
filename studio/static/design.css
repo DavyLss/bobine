@@ -32,3 +32,5 @@ body[data-view] .view-heading,body[data-view] .history-grid,body[data-view] .pub
 /* Supplied studio identity; shared with the README and browser tab. */
 .logo .brand-logo{display:block;width:48px;height:48px;object-fit:contain;border-radius:10px;flex-shrink:0}
 @media(max-width:680px){.logo .brand-logo{width:34px;height:34px;border-radius:7px}}
+
+.carnet-choice{grid-column:1/-1}.carnet-art{background-color:#f0ebe0;background-image:radial-gradient(#bdb7a9 .8px,transparent .8px);background-size:13px 13px;color:#262923}.carnet-art .art-caption{font-family:Georgia,serif;font-weight:bold;font-size:24px}.carnet-art .art-objects>*{background:#fcf9f2;border:1px solid #262923;box-shadow:4px 4px 0 #262923;color:#24675f;font:600 22px monospace}.carnet-art .art-objects i{color:#bb5437}.carnet-art .art-dots{font:9px monospace;letter-spacing:2px}.preview-film.carnet-film{background-color:#f0ebe0;background-image:radial-gradient(#c8c1b5 1px,transparent 1px);background-size:18px 18px;color:#262923}.carnet-film h3{font-family:Georgia,serif}.carnet-film .preview-signature{color:#24675f}

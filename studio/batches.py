@@ -10,7 +10,7 @@ MAX_PENDING=500
 
 class VideoSettings(BaseModel):
     model_config=ConfigDict(extra='forbid')
-    theme:Literal['dark','light']='dark'
+    theme:Literal['dark','light','carnet']='dark'
     duration:int=Field(default=90,ge=15,le=180)
     format:Literal['reel','standard']='reel'
     voice:Literal['Narrateur-Homme-01','Narratrice-Femme-01','Duo-Homme-Femme']=VOICE_ID
@@ -50,7 +50,7 @@ def normalize(value):
 
 HEADERS={'title':'title','titre':'title','description':'description','theme':'theme','charte':'theme','direction':'theme','duration':'duration','duree':'duration','format':'format','voice':'voice','voix':'voice','auto_publish':'auto_publish','publication_auto':'auto_publish','publish_platforms':'publish_platforms','reseaux':'publish_platforms','publish_mode':'publish_mode','mode_publication':'publish_mode'}
 ALIASES={
-    'theme':{'dark':'dark','sombre':'dark','atelier sombre':'dark','light':'light','clair':'light','editorial clair':'light'},
+    'theme':{'dark':'dark','sombre':'dark','atelier sombre':'dark','light':'light','clair':'light','editorial clair':'light','carnet':'carnet','carnet anime':'carnet'},
     'format':{'reel':'reel','reels':'reel','9:16':'reel','standard':'standard','16:9':'standard'},
     'voice':{normalize(VOICE_ID):VOICE_ID,'homme':VOICE_ID,'narrateur homme':VOICE_ID,'narratrice-femme-01':'Narratrice-Femme-01','femme':'Narratrice-Femme-01','narratrice femme':'Narratrice-Femme-01','duo':'Duo-Homme-Femme','discussion':'Duo-Homme-Femme','duo-homme-femme':'Duo-Homme-Femme'},
 }
@@ -94,7 +94,7 @@ def validate_batch(body):
         try:items.append(VideoRequest.model_validate(values).model_dump())
         except ValidationError as error:
             fields=', '.join(dict.fromkeys(str(e['loc'][0]) if e['loc'] else 'publication_auto / réseaux / format' for e in error.errors()))
-            errors.append(f'Ligne {line} : vérifier {fields}. Durée entière de 15 à 180 s ; charte dark/light ; format reel/standard ; voix homme, femme ou duo. Titre de 3 à 120 caractères, description de 10 à 6 000 caractères.')
+            errors.append(f'Ligne {line} : vérifier {fields}. Durée entière de 15 à 180 s ; charte dark/light/carnet ; format reel/standard ; voix homme, femme ou duo. Titre de 3 à 120 caractères, description de 10 à 6 000 caractères.')
     if errors:raise ValueError('\n'.join(errors))
     return items,[line for line,_ in rows]
 

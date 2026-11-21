@@ -58,10 +58,10 @@ def lines_for(draw,text,size,max_width,max_lines):
 
 def make_thumbnail(out,config,text,vertical):
     w,h=(1080,1920) if vertical else (1280,720)
-    dark=config.get('theme','dark')=='dark'
-    ink='#F4E8CC' if dark else '#17202B';accent='#E4B75B' if dark else '#2364D2'
+    dark=config.get('theme','dark')=='dark';carnet=config.get('theme')=='carnet'
+    ink='#262923' if carnet else '#F4E8CC' if dark else '#17202B';accent='#24675F' if carnet else '#E4B75B' if dark else '#2364D2'
     with Image.open(out/'Poster.jpg') as poster:background=ImageOps.fit(poster.convert('RGB'),(w,h)).filter(ImageFilter.GaussianBlur(35))
-    tint=Image.new('RGB',(w,h),'#18191D' if dark else '#F5F7FB');background=Image.blend(background,tint,.88)
+    tint=Image.new('RGB',(w,h),'#F0EBE0' if carnet else '#18191D' if dark else '#F5F7FB');background=Image.blend(background,tint,.88)
     draw=ImageDraw.Draw(background);margin=80
     draw.rounded_rectangle((margin,margin,margin+160,margin+8),radius=4,fill=accent)
     label='À COMPRENDRE' if vertical else 'EXPLICATION SIMPLE'
@@ -76,7 +76,7 @@ def make_thumbnail(out,config,text,vertical):
     for i,(cx,color) in enumerate(zip(centers,colors)):
         draw.rounded_rectangle((cx-60,cy-65,cx+60,cy+65),radius=22,fill=tint.getpixel((0,0)),outline=color,width=4)
         draw.text((cx,cy),str(i+1),font=font(50),fill=color,anchor='mm')
-    brand='ATELIER SOMBRE' if dark else 'ÉDITORIAL CLAIR'
+    brand='CARNET ANIMÉ' if carnet else 'ATELIER SOMBRE' if dark else 'ÉDITORIAL CLAIR'
     if vertical:draw.text((margin,h-100),brand,font=font(23),fill=accent)
     else:draw.text((w-margin,margin+40),brand,font=font(21),fill=accent,anchor='ra')
     path=out/('Miniature-Reel.jpg' if vertical else 'Miniature-YouTube.jpg');background.save(path,quality=94,optimize=True)

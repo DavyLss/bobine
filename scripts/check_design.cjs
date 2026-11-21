@@ -11,6 +11,7 @@ $('composer-next').click();assert(!panels[1].hidden);assert.equal($('voice').clo
 $('composer-next').click();assert(!panels[2].hidden);assert(!d.querySelector('.composer-launch').hidden);assert($('launch-summary').textContent.includes('Le DevOps'));
 $('voice').value='Narratrice-Femme-01';$('voice').dispatchEvent(new w.Event('change',{bubbles:true}));assert.match($('launch-summary').textContent,/Narratrice femme/);
 $('voice').value='Duo-Homme-Femme';$('voice').dispatchEvent(new w.Event('change',{bubbles:true}));assert.match($('launch-summary').textContent,/Duo/);
+d.querySelector('[name=theme][value=carnet]').checked=true;d.querySelector('[name=theme][value=carnet]').dispatchEvent(new w.Event('change',{bubbles:true}));assert.match($('launch-summary').textContent,/Carnet animé/);
 $('composer-back').click();assert(!panels[1].hidden);
 w.location.hash='#history';w.dispatchEvent(new w.HashChangeEvent('hashchange'));assert.equal(links[2].getAttribute('aria-current'),'page');assert.equal(d.body.dataset.view,'history');
 w.location.hash='#batch-monitor';w.dispatchEvent(new w.HashChangeEvent('hashchange'));assert(!$('queue-empty').hidden);

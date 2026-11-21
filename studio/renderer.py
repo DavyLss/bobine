@@ -1,4 +1,4 @@
-"""Parameterized original motion design, two charters and native aspect layouts."""
+"""Parameterized original motion design, reusable directions and native aspect layouts."""
 import json,math
 from functools import lru_cache
 import numpy as np
@@ -134,7 +134,11 @@ class Film:
         if t>self.duration-.45:im=Image.blend(self.bg,im,max(0,(self.duration-t)/.45))
         return np.asarray(im.convert('RGB'))
 def render(out,config,data,progress):
-    film=Film(out,config,data);audio=AudioFileClip(str(out/'Narration.wav'));film.duration=audio.duration;last=[-1]
+    if config.get('theme')=='carnet':
+        from renderer_carnet import CarnetFilm
+        film=CarnetFilm(out,config,data)
+    else:film=Film(out,config,data)
+    audio=AudioFileClip(str(out/'Narration.wav'));film.duration=audio.duration;last=[-1]
     def frame(t):
         pct=min(100,int(t/film.duration*100))
         if pct>=last[0]+2:last[0]=pct;progress(pct)
