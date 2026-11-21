@@ -137,6 +137,9 @@ def render(out,config,data,progress):
     if config.get('theme')=='carnet':
         from renderer_carnet import CarnetFilm
         film=CarnetFilm(out,config,data)
+    elif config.get('theme')=='papier':
+        from renderer_papier import PapierFilm
+        film=PapierFilm(out,config,data)
     else:film=Film(out,config,data)
     audio=AudioFileClip(str(out/'Narration.wav'));film.duration=audio.duration;last=[-1]
     def frame(t):
@@ -146,5 +149,5 @@ def render(out,config,data,progress):
     clip=VideoClip(frame_function=frame,duration=audio.duration).with_audio(audio)
     from encoding import encoder
     codec,params=encoder()
-    try:clip.write_videofile(str(out/'Video.mp4'),fps=30,codec=codec,audio_codec='aac',audio_bitrate='192k',ffmpeg_params=params,logger=None)
+    try:clip.write_videofile(str(out/'Video.mp4'),fps=30,codec=codec,audio_codec='aac',audio_bitrate='192k',temp_audiofile=str(out/'Audio-rendu-temp.m4a'),ffmpeg_params=params,logger=None)
     finally:clip.close();audio.close()
