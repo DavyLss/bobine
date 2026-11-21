@@ -6,13 +6,32 @@
 
 [![Licence MIT](https://img.shields.io/badge/licence-MIT-green)](LICENSE) [![Vérifications hors ligne](https://github.com/DavyLss/bobine/actions/workflows/check.yml/badge.svg)](https://github.com/DavyLss/bobine/actions/workflows/check.yml)
 
-Studio vidéo pédagogique en français, exécuté sur le poste : scénario IA, voix masculine ou féminine de référence, sous-titres synchronisés et animations. Interface simple : titre, description, charte, durée moyenne, format, puis génération avec suivi et historique.
+Studio vidéo pédagogique en français, exécuté sur le poste : scénario IA, voix masculine, féminine ou dialogue Duo, sous-titres synchronisés et animations. Interface simple : titre, description, charte, durée moyenne, format, puis génération avec suivi et historique.
 
-Deux directions conservées : **Atelier sombre** et **Éditorial clair**, avec apparitions, rebonds, objets et typographie. La dernière charte utilisée est mémorisée. Formats **Reel 1080 × 1920** et **Standard 1920 × 1080**, 30 images/s, MP4 H.264/AAC.
+Quatre directions réutilisables : **Atelier sombre**, **Éditorial clair**, **Carnet animé** et **Papier découpé**. La dernière charte utilisée est mémorisée. Formats **Reel 1080 × 1920** et **Standard 1920 × 1080**, 30 images/s, MP4 H.264/AAC.
+
+## Directions visuelles
+
+| Direction | Univers | Valeur CSV | Charte |
+| --- | --- | --- | --- |
+| Atelier sombre | Scène sombre, objets illustrés, sous-titres en capitales | `dark` | [Règles](docs/chartes/Atelier-Sombre/Charte-reutilisable.md) |
+| Éditorial clair | Fond lumineux, cartes et apparitions animées | `light` | [Règles](docs/chartes/Clair/Charte-reutilisable.md) |
+| Carnet animé | Papier et encre, titres éditoriaux, guide optique | `carnet` | [Règles](docs/chartes/CARNET-ANIME.md) |
+| Papier découpé | Collage, bandeaux découpés, objets en mouvement et oiseau origami | `papier` | [Règles](docs/chartes/PAPIER-DECOUPE.md) |
+
+Les quatre directions fonctionnent en Reel et standard, avec les voix homme, femme ou Duo. Le rendu reste local. Le mode Duo alterne les deux voix de référence sans afficher le nom des intervenants.
+
+**Papier découpé : image extraite d'un export local**, avec sous-titres synchronisés et personnage original.
+
+<p align="center"><img src="docs/screenshots/papier-rendu.jpg" width="300" alt="Rendu Papier découpé : titre sur bandeau jaune, panneaux crème et oiseau origami sur fond vert"></p>
 
 ## Aperçu du studio
 
-Captures de l’interface actualisées le 15 novembre 2026.
+**Choix des quatre directions**, capture du 21 novembre 2026 :
+
+![Choix de Papier découpé dans La réalisation, avec les quatre directions et l'aperçu de charte](docs/screenshots/directions.jpg)
+
+Les captures suivantes datent du 15 novembre 2026.
 
 **Création en trois étapes** : sujet, réalisation et diffusion, avec moniteur de prévisualisation.
 
