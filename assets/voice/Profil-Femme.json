@@ -1,9 +1,9 @@
 {
-  "name": "Narrateur-Homme-01",
+  "name": "Narratrice-Femme-01",
   "model": "Qwen3-TTS-12Hz-1.7B-Base",
-  "reference_sha256": "1cfac6b5af36120516e6709996faadb6ef25abfa6146f6ea3e5df1f076e46bf2",
-  "reference_text": "Une idée devient plus claire quand on prend le temps de l'expliquer. Ensemble, découvrons un exemple concret, étape par étape. Vous verrez, quelques mots simples peuvent tout changer.",
-  "seed": 1842,
+  "reference_sha256": "70674d5bb615b9b091243c483215872cf3f20e2d1de21db93a0d3082bc6af9b3",
+  "reference_text": "Le site vient de tomber. On cherche un responsable ? Ça se comprend. Mais pour éviter la prochaine panne, il y a une question plus utile : qu'est-ce qui a rendu cette erreur possible ?",
+  "seed": 2187,
   "settings": {
     "non_streaming_mode": true,
     "max_new_tokens": 450,
@@ -14,5 +14,5 @@
     "subtalker_temperature": 0.5,
     "subtalker_top_p": 0.9
   },
-  "design_instruction": "A native French female narrator in her thirties, warm clear natural mid-range voice, metropolitan French accent, conversational educational delivery, gently expressive with natural pauses and varied intonation. Confident and friendly, calm moderate pace. Clean dry studio recording, no reverb, no music, no sound effects, no whispering, no exaggerated breathiness."
+  "design_instruction": "Native French female, around 35, metropolitan French accent. Warm grounded mid-range voice with clear effortless articulation. Intimate conversational explanation to one friend sitting nearby, sincerely curious and engaged. Natural connected speech with subtle varied intonation and gentle phrasing, relaxed unforced pace, a small questioning lift on the question, then thoughtful and reassuring. Sound like a real person thinking through an idea, not reading a script. No announcer voice, no advertising delivery, no dramatic acting, no excessive emphasis on every word, no exaggerated pauses, no whispering, no nasal resonance, no vocal fry. Dry close studio microphone, clean voice only, no music or effects."
 }
