@@ -4,6 +4,7 @@ from functools import lru_cache
 import numpy as np
 from PIL import Image,ImageDraw,ImageFilter
 from moviepy import VideoClip,AudioFileClip
+from narration import DUO_ID,HOSTS,LABELS
 import illustrations as art
 import motion as m
 
@@ -106,6 +107,14 @@ class Film:
         else:
             self.tx(d,85,82,'STUDIO / VIDÉO',24,self.muted,'lm');self.title(d,self.config['title'],350,240,550,44);self.title(d,scene['title'],350,420,560,32)
             stage=self.visual(k,u).resize((1050,798),Image.Resampling.LANCZOS);position=(780,120)
+        if self.config.get('voice')==DUO_ID:
+            for j,speaker in enumerate(HOSTS):
+                active=scene.get('speaker')==speaker
+                x=(220+j*345) if self.vertical else (85+j*265)
+                y=225 if self.vertical else 320;width=295 if self.vertical else 240;height=55
+                color=self.colors[j]
+                self.block(d,(x,y,x+width,y+height),color if active else self.surface,color if active else self.border,r=14)
+                self.tx(d,x+width/2,y+height/2,LABELS[speaker],27 if self.vertical else 24,('#17202B' if self.dark else '#FFFFFF') if active else self.muted)
         layer=Image.new('RGBA',im.size);layer.alpha_composite(stage,position);m.entrance(im,layer,u-.02)
         group=next((g for g in self.groups if g[0]['start']-.04<=t<=g[-1]['end']+.13),None)
         if group:

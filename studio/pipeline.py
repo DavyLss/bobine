@@ -1,8 +1,9 @@
 from pathlib import Path
-import sys,json,re,difflib,unicodedata,subprocess,traceback,hashlib
+import sys,json,re,difflib,unicodedata,subprocess,traceback
 import requests,numpy as np,soundfile as sf
 from faster_whisper import WhisperModel
-from config import ROOT,MODELS,VOICE,VOICE_PYTHON,OLLAMA_URL,OLLAMA_MODEL,voice_files
+from config import ROOT,MODELS,VOICE,VOICE_PYTHON,OLLAMA_URL,OLLAMA_MODEL
+from narration import DUO_ID,LABELS,speaker_ids,reference_hashes
 HERE=Path(__file__).resolve().parent
 def emit(stage,message,progress,**extra):print('@studio '+json.dumps(dict(stage=stage,message=message,progress=progress,**extra),ensure_ascii=False),flush=True)
 def norm(s):return re.sub('[^a-z0-9]','', ''.join(c for c in unicodedata.normalize('NFD',s.lower()) if not unicodedata.combining(c)))
@@ -22,10 +23,14 @@ def editorial_issues(scenes):
     return issues
 
 def scenario(config,out):
-    count=max(3,min(16,round(config['duration']/8)));budget=round((config['duration']-count*.65)*2.2)
+    duo=config.get('voice')==DUO_ID
+    count=max(3,min(16,round(config['duration']/8)))
+    if duo:count=max(4,count+count%2)
+    budget=round((config['duration']-count*(.35 if duo else .65))*2.2)
     schema={'type':'object','properties':{'scenes':{'type':'array','minItems':count,'maxItems':count,'items':{'type':'object','properties':{'title':{'type':'string'},'text':{'type':'string'},'visual':{'type':'string','enum':['flow','cycle','compare','steps','target','people','chart','question']},'labels':{'type':'array','items':{'type':'string'},'minItems':2,'maxItems':3}},'required':['title','text','visual','labels']}}},'required':['scenes']}
     schema['properties']['scenes']['items']['properties']['text'].update(minLength=max(50,round(budget/count*5.5)),maxLength=max(220,round(budget/count*10)))
     schema['properties']['scenes']['items']['properties']['title']['maxLength']=70
+    if duo:schema['properties']['scenes']['items']['properties']['text'].update(minLength=max(30,round(budget/count*3)),maxLength=max(180,round(budget/count*9)))
     prompt=f'''Crée une vidéo pédagogique en français accessible. Sujet : {config['title']}.
 Description fournie par l'utilisateur : {config['description']}
 Durée cible {config['duration']} secondes, environ {budget} mots de narration AU TOTAL, {count} plans.
@@ -45,12 +50,18 @@ La longueur de chaque passage doit surtout répartir le budget total de mots : 5
     if 'blameless' in (config['title']+' '+config['description']).lower():
         # Curated grounding, available offline: https://sre.google/sre-book/postmortem-culture/
         prompt+='\nFond à respecter pour ce sujet : après un incident, reconstituer les faits et les informations disponibles au moment des décisions, chercher les facteurs contributifs dans le système, puis attribuer et suivre des actions préventives concrètes. Absence de blâme ne veut pas dire absence de responsabilité. Ne pas réduire ce concept à partager les logs ou corriger plus vite. Aucun délai de résolution garanti.'
+    if duo:
+        prompt+=f'\nChaque réplique vise {round(budget/count)} mots, pour {budget} mots dans tout l’échange.'
+        prompt+='\nMODE DUO : écris un vrai échange entre un animateur et une animatrice, une réplique par plan. Les plans impairs sont dits par l’animateur, les plans pairs par l’animatrice. Chaque réplique répond à la précédente, rebondit, questionne ou apporte une nuance. Les deux expliquent et posent des questions, sans rôle stéréotypé. Phrases courtes et orales, un seul exemple partagé et une conclusion commune. Évite deux monologues alternés, les salutations, les noms des locuteurs dans text, les didascalies et les acquiescements de remplissage. Garde le même budget total : la durée ne double pas.'
+        editor['content']="Tu écris le dialogue oral de deux présentateurs. Chaque champ text contient UNIQUEMENT les mots prononcés par UN seul interlocuteur, à la première ou deuxième personne. Jamais de narrateur externe, de nom de locuteur, de didascalie ni de phrase décrivant qui parle. Ne dis jamais « l’animateur », « l’animatrice », « il demande » ou « elle répond ». Les plans impairs sont les paroles de l’homme, les plans pairs celles de la femme. Une vraie question appelle une réponse puis un rebond. Exemple de forme : plan 1 text=On cherche un coupable, ou une explication ? plan 2 text=Une explication. Sinon, comment changer ce qui a rendu cette erreur possible ? Tu dois expliquer le sujet demandé, pas décrire des gens qui en parlent. Répliques courtes et naturelles, pas de remplissage. Respecte le budget total de mots et le JSON."
     messages=[editor,{'role':'user','content':prompt}];reviews=[]
     for attempt in range(3):
         response=requests.post(OLLAMA_URL+'/api/chat',json={'model':OLLAMA_MODEL,'messages':messages,'stream':False,'think':False,'format':schema,'keep_alive':0,'options':{'temperature':.5,'num_predict':5000,'num_ctx':8192}},timeout=(5,300))
         response.raise_for_status();data=json.loads(response.json()['message']['content']);scenes=data.get('scenes',[])
         words=sum(len(s.get('text','').split()) for s in scenes)
         issues=editorial_issues(scenes)
+        if duo and any(re.search(r'\b(?:de|du|des|le|la|les|un|une|et|mais|pour|avec|à|au|aux|en|dans|sur)[.!?…]*$',scene.get('text','').strip(),re.IGNORECASE) for scene in scenes):issues.append('Terminer chaque phrase : une réplique reste coupée sur un mot de liaison.')
+        if duo and any(re.search(r'\b(?:animateur|animatrice)\b',scene.get('text',''),re.IGNORECASE) for scene in scenes):issues.append('Écrire des paroles directes, sans animateur/animatrice dans text, sans narrateur externe ni noms de rôles.')
         unsupported=set(re.findall(r'\d+(?:[.,]\d+)?',' '.join(scene.get('text','') for scene in scenes)))-set(re.findall(r'\d+(?:[.,]\d+)?',config['title']+' '+config['description']))
         if unsupported:issues.append('Retirer les chiffres absents du brief : '+', '.join(sorted(unsupported))+'. Ne promettre aucun délai de résolution.')
         if not .7*budget<=words<=1.35*budget:issues.append(f'{words} mots actuellement : viser {budget} mots sans redites.')
@@ -74,7 +85,9 @@ La longueur de chaque passage doit surtout répartir le budget total de mots : 5
     for scene in scenes:
         scene['text']=re.sub(r'\bsans risque\b','en limitant les risques',scene['text'],flags=re.IGNORECASE)
         scene['text']=re.sub(r'\béviter toutes les erreurs\b','réduire les erreurs',scene['text'],flags=re.IGNORECASE)
-    data.update(title=config['title'],target_duration=config['duration'],voice=config.get('voice','Narrateur-Homme-01'),reference_sha256=hashlib.sha256(voice_files(config.get('voice','Narrateur-Homme-01'))[1].read_bytes()).hexdigest())
+    if duo:
+        for scene,speaker in zip(scenes,speaker_ids(DUO_ID,scenes)):scene['speaker']=speaker
+    data.update(title=config['title'],target_duration=config['duration'],voice=config.get('voice','Narrateur-Homme-01'),reference_sha256=reference_hashes(config.get('voice','Narrateur-Homme-01')))
     (out/'Scenario.json').write_text(json.dumps(data,ensure_ascii=False,indent=2),encoding='utf-8');return data
 def voice(out,indices=None):
     exe=VOICE_PYTHON
@@ -117,12 +130,12 @@ def align(out,data):
             chars=[owners[mapping[n]] for n in range(offset,offset+len(norm(word))) if n in mapping];offset+=len(norm(word))
             a=ws[chars[0]].start-left if chars else duration*j/len(tokens);b=ws[chars[-1]].end-left if chars else duration*(j+1)/len(tokens)
             a=max(0,min(duration-.04,a));b=max(a+.04,min(duration,b));entries.append({'cue':i,'text':word,'start':cursor+a,'end':cursor+b})
-        timing.append({'start':cursor,'end':cursor+duration,'text':scene['text']});pause=.6 if i<len(data['scenes'])-1 else 1.1
+        timing.append({'start':cursor,'end':cursor+duration,'text':scene['text'],**({'speaker':scene['speaker']} if scene.get('speaker') else {})});pause=(.3 if data.get('voice')==DUO_ID else .6) if i<len(data['scenes'])-1 else 1.1
         parts.extend([clip,np.zeros(round(pause*sr))]);cursor+=duration+pause
     sf.write(out/'Narration.wav',np.concatenate(parts),sr,subtype='PCM_16')
     for name,value in [('Chronologie.json',timing),('Mots-alignes.json',{'words':entries}),('Controle-texte.json',checks)]:
         (out/name).write_text(json.dumps(value,ensure_ascii=False,indent=2),encoding='utf-8')
-    (out/'Sous-titres.srt').write_text('\n\n'.join(f'{i+1}\n{stamp(t["start"])} --> {stamp(t["end"])}\n{t["text"]}' for i,t in enumerate(timing)),encoding='utf-8')
+    (out/'Sous-titres.srt').write_text('\n\n'.join(f'{i+1}\n{stamp(t["start"])} --> {stamp(t["end"])}\n{(LABELS[t["speaker"]]+": ") if t.get("speaker") else ""}{t["text"]}' for i,t in enumerate(timing)),encoding='utf-8')
     return cursor
 def main(out):
     config=json.loads((out/'Request.json').read_text(encoding='utf-8'))
