@@ -1,9 +1,9 @@
 {
   "name": "Narrateur-Homme-01",
   "model": "Qwen3-TTS-12Hz-1.7B-Base",
-  "reference_sha256": "fd6d71e15faab5ac65d90ef5617a01317ccc6e0aed653b3a7f58f07f5f77b6fa",
-  "reference_text": "Au centre, le pourquoi. C'est la raison d'être de votre projet. Par exemple : aider chacun à apprendre plus facilement. C'est votre intention, pas votre produit.",
-  "seed": 1234,
+  "reference_sha256": "2bcc8317b5f0d72255567d2a49fb1efa93f299235242361906f1ee6bfbf796eb",
+  "reference_text": "Le site vient de tomber. On cherche un responsable ? Ça se comprend. Mais pour éviter la prochaine panne, il y a une question plus utile : qu'est-ce qui a rendu cette erreur possible ?",
+  "seed": 2186,
   "settings": {
     "non_streaming_mode": true,
     "max_new_tokens": 450,
@@ -13,5 +13,6 @@
     "repetition_penalty": 1.05,
     "subtalker_temperature": 0.5,
     "subtalker_top_p": 0.9
-  }
+  },
+  "design_instruction": "Native French male, around 35, metropolitan French accent. Warm grounded mid-low voice with clear effortless articulation. Intimate conversational explanation to one friend sitting nearby, sincerely curious and engaged. Natural connected speech with subtle varied intonation and gentle phrasing, relaxed unforced pace, a small questioning lift on the question, then thoughtful and reassuring. Sound like a real person thinking through an idea, not reading a script. No announcer voice, no advertising delivery, no dramatic acting, no excessive emphasis on every word, no exaggerated pauses, no whispering, no nasal resonance, no vocal fry. Dry close studio microphone, clean voice only, no music or effects."
 }
