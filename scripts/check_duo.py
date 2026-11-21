@@ -55,10 +55,13 @@ with tempfile.TemporaryDirectory() as directory:
  timing=json.loads((out/'Chronologie.json').read_text(encoding='utf-8'))
  assert [t['speaker'] for t in timing]==list(HOSTS)*2
  assert abs(timing[1]['start']-timing[0]['end']-.3)<.001
- srt=(out/'Sous-titres.srt').read_text(encoding='utf-8');assert 'Animateur: ' in srt and 'Animatrice: ' in srt
+ srt=(out/'Sous-titres.srt').read_text(encoding='utf-8');assert 'Animateur' not in srt and 'Animatrice' not in srt
  from renderer import Film
  for aspect in ['reel','standard']:
   for theme in ['dark','light']:
    film=Film(out,{**config,'format':aspect,'theme':theme},data);film.duration=timing[-1]['end']+1.1
-   for t in timing[:2]:assert film.frame(t['start']+.2).shape==((1920,1080,3) if aspect=='reel' else (1080,1920,3))
+   for t in timing[:2]:
+    with patch.object(film,'tx',wraps=film.tx) as draw:
+     assert film.frame(t['start']+.2).shape==((1920,1080,3) if aspect=='reel' else (1080,1920,3))
+     assert not any(str(call.args[3]) in ['Animateur','Animatrice'] for call in draw.call_args_list)
 print('OK: dialogue, CSV, fixed alternating references, retries, turn timing, subtitles and both visual formats.')

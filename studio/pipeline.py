@@ -3,7 +3,7 @@ import sys,json,re,difflib,unicodedata,subprocess,traceback
 import requests,numpy as np,soundfile as sf
 from faster_whisper import WhisperModel
 from config import ROOT,MODELS,VOICE,VOICE_PYTHON,OLLAMA_URL,OLLAMA_MODEL
-from narration import DUO_ID,LABELS,speaker_ids,reference_hashes
+from narration import DUO_ID,speaker_ids,reference_hashes
 HERE=Path(__file__).resolve().parent
 def emit(stage,message,progress,**extra):print('@studio '+json.dumps(dict(stage=stage,message=message,progress=progress,**extra),ensure_ascii=False),flush=True)
 def norm(s):return re.sub('[^a-z0-9]','', ''.join(c for c in unicodedata.normalize('NFD',s.lower()) if not unicodedata.combining(c)))
@@ -135,7 +135,7 @@ def align(out,data):
     sf.write(out/'Narration.wav',np.concatenate(parts),sr,subtype='PCM_16')
     for name,value in [('Chronologie.json',timing),('Mots-alignes.json',{'words':entries}),('Controle-texte.json',checks)]:
         (out/name).write_text(json.dumps(value,ensure_ascii=False,indent=2),encoding='utf-8')
-    (out/'Sous-titres.srt').write_text('\n\n'.join(f'{i+1}\n{stamp(t["start"])} --> {stamp(t["end"])}\n{(LABELS[t["speaker"]]+": ") if t.get("speaker") else ""}{t["text"]}' for i,t in enumerate(timing)),encoding='utf-8')
+    (out/'Sous-titres.srt').write_text('\n\n'.join(f'{i+1}\n{stamp(t["start"])} --> {stamp(t["end"])}\n{t["text"]}' for i,t in enumerate(timing)),encoding='utf-8')
     return cursor
 def main(out):
     config=json.loads((out/'Request.json').read_text(encoding='utf-8'))
